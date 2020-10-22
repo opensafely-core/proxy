@@ -7,8 +7,7 @@ server {
     server_name ${PROXY};
     root /var/www/html;
 
-    listen [::]:8080;
-    listen 8080;
+    listen ${PORT};
 
     location / {
         limit_except GET { deny all; }
