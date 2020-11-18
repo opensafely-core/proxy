@@ -1,0 +1,14 @@
+name: Check github auth header
+on:
+  schedule:
+    # 09:00 UTC every day
+    - cron: '0 9 * * *'
+env:
+    EXPECTED: 'Bearer realm="https://ghcr.io/token",service="ghcr.io",scope="repository:user/image:pull"'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - name: check
+      run: |
+        test "$(curl -si https://ghcr.io/v2/ | grep -i www-authenticate | awk -F': ' '{print $2}')" = "$EXPECTED"
