@@ -1,5 +1,6 @@
 # PROXY_DOMAIN: user visible domain, e.g. docker.opensafely.org, which hosted by cloudflare
 # PROXY_ORIGIN: the backend, e.g. docker-proxy.dokku2.ebmdatalab.org
+# RESLOLVER: DNS resolver for dynamically looking up redirect domains
 # PORT: provided by dokku, defaults to 80
 
 # The docker cli uses the realm domain given in the www-authenticate to auth.
@@ -15,19 +16,34 @@ server {
     # be idendified by either domain
     server_name ${PROXY_DOMAIN} ${PROXY_ORIGIN};
     root /var/www/html;
-
     listen ${PORT};
+
+    # we need a resolver configured so we can look up domains when redirecting
+    resolver ${RESOLVER};
 
     location / {
         # Only GET/HEAD
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
         proxy_http_version 1.1;
-	# hide upstream header
+        # ghcr.io redirects to an S3 bucket, which is not accessible. So handle
+        # redirects to S3 here in the proxy rather than passing back to the
+        # client
+        proxy_intercept_errors on;
+        error_page 301 302 307 = @handle_redirect;
+        # hide upstream header
         proxy_hide_header www-authenticate;
         # add our modified header 
         # TODO: figure out how to just do this on a 401
         add_header Www-Authenticate $auth_header always;
     }
 
+    location @handle_redirect {
+        # set saves the initial response's Location: header
+        set $redirect '$upstream_http_location';
+        # strip the ghcr.io auth or else AWS rejects it
+        proxy_set_header Authorization "";
+        # proxy the AWS location back to the client
+        proxy_pass $redirect;
+    }
 }
