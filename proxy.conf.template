@@ -1,6 +1,6 @@
 # PROXY_DOMAIN: user visible domain, e.g. docker.opensafely.org, which hosted by cloudflare
 # PROXY_ORIGIN: the backend, e.g. docker-proxy.dokku2.ebmdatalab.org
-# RESLOLVER: DNS resolver for dynamically looking up redirect domains
+# RESOLVER: DNS resolver for dynamically looking up redirect domains
 # PORT: provided by dokku, defaults to 80
 
 # The docker cli uses the realm domain given in the www-authenticate to auth.
