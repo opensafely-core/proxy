@@ -27,7 +27,7 @@ server {
     # we need a resolver configured so we can look up domains when redirecting
     resolver ${RESOLVER};
 
-    # excat match, initial query, rewrite www-authentication header
+    # exact match, initial query, rewrite www-authentication header
     location = /v2/ {
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
@@ -57,13 +57,14 @@ server {
     location @handle_redirect {
         # set saves the initial response's Location: header
         set $redirect '$upstream_http_location';
-        # strip the ghcr.io auth or else AWS rejects it, also stops is leaking
+        # strip the ghcr.io auth or else AWS rejects it, also stops it leaking
         proxy_set_header Authorization "";
         # proxy the AWS location back to the client
         proxy_pass $redirect;
     }
 
     location /v2/ {
+        limit_except GET { deny all; }
         # 404 any other /v2/<org> paths in a way that the docker client understands
         add_header 'Content-Type' 'application/json charset=UTF-8';
         return 404 '{ "errors": [{"code": "NAME_UNKNOWN", "message": "only opensafely repositories allowed" }] }';
