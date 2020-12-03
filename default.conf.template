@@ -1,0 +1,72 @@
+# PROXY_DOMAIN: user visible domain, e.g. docker.opensafely.org, which hosted by cloudflare
+# PROXY_ORIGIN: the backend, e.g. docker-proxy.dokku2.ebmdatalab.org
+# RESOLVER: DNS resolver for dynamically looking up redirect domains
+# PORT: provided by dokku, defaults to 80
+
+# The docker cli uses the realm domain given in the www-authenticate to auth.
+# So we need to re-write from ghcr.io to our proxy.
+# Use a map as it is built in, even though its not a clean way to replace strings.
+# Ideally would use more-headers module, but its not in the default image.
+map $upstream_http_www_authenticate $auth_header {
+        # used to have 1 occurance of domain, now has 2. Handle both.
+        ~(.*)ghcr.io(.*)ghcr.io(.*) $1${PROXY_DOMAIN}$2${PROXY_DOMAIN}$3;
+        ~(.*)ghcr.io(.*)            $1${PROXY_DOMAIN}$2;
+}
+
+proxy_http_version 1.1; # keep alives to gchr.io
+proxy_buffering off;    # start streaming response immeadiately
+#error_log /var/log/nginx/error-debug.log debug;
+
+server {
+
+    # be identified by either domain
+    server_name ${PROXY_DOMAIN} ${PROXY_ORIGIN};
+    root /var/www/html;
+    listen ${PORT};
+
+    # we need a resolver configured so we can look up domains when redirecting
+    resolver ${RESOLVER};
+
+    # exact match, initial query, rewrite www-authentication header
+    location = /v2/ {
+        limit_except GET { deny all; }
+        proxy_pass https://ghcr.io;
+        # hide upstream header
+        proxy_hide_header www-authenticate;
+        # add our modified header 
+        add_header Www-Authenticate $auth_header always;
+    }
+
+    # authentication API, just pass thru
+    location /token {
+        limit_except GET { deny all; }
+        proxy_pass https://ghcr.io;
+    }
+
+    # opensafely images only, and handle redirects
+    location /v2/opensafely/ {
+        limit_except GET { deny all; }
+        proxy_pass https://ghcr.io;
+        # ghcr.io redirects to an S3 bucket, which is not accessible from
+        # backends. So handle redirects to S3 here in the proxy rather than
+        # passing back to the client
+        proxy_intercept_errors on;
+        error_page 301 302 307 = @handle_redirect;
+    }
+
+    location @handle_redirect {
+        # set saves the initial response's Location: header
+        set $redirect '$upstream_http_location';
+        # strip the ghcr.io auth or else AWS rejects it, also stops it leaking
+        proxy_set_header Authorization "";
+        # proxy the AWS location back to the client
+        proxy_pass $redirect;
+    }
+
+    location /v2/ {
+        limit_except GET { deny all; }
+        # 404 any other /v2/<org> paths in a way that the docker client understands
+        add_header 'Content-Type' 'application/json charset=UTF-8';
+        return 404 '{ "errors": [{"code": "NAME_UNKNOWN", "message": "only opensafely repositories allowed" }] }';
+    }
+}

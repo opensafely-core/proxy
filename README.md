@@ -8,11 +8,9 @@ backends to run OpenSAFELY studies. However, we don't want to require backends
 to allow network access to ghcr.io, as that could in theory be used to
 exfiltrate data.
 
-So this proxy provides a single point of read-only access to the OpenSAFELY
-images on ghcr.io, by only proxying GET requests.
-
-*TODO: cache blobs*
-*TODO: restrict blobs to /opensafely/ org?*
+So this proxy provides a single point of read-only access to only the
+OpenSAFELY images on ghcr.io, by only proxying GET requests to /v2/opensafely/
+urls.
 
 
 ## Building
