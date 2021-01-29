@@ -17,7 +17,7 @@ urls.
 
 To build:
 
-`docker build . -t ghcr.io/opensafely/docker-proxy`
+`docker build . -t ghcr.io/opensafely-core/docker-proxy`
 
 Config is supplied via env vars:
 
@@ -28,7 +28,7 @@ Config is supplied via env vars:
 
 To run locally:
 
-`docker run -d  -e PROXY_DOMAIN=<domain> -e PROXY_ORIGIN=<origin> -e RESOLVER=127.0.0.1 -e PORT=80 ghcr.io/opensafely/docker-proxy`
+`docker run -d  -e PROXY_DOMAIN=<domain> -e PROXY_ORIGIN=<origin> -e RESOLVER=127.0.0.1 -e PORT=80 ghcr.io/opensafely-core/docker-proxy`
 
 ## Testing 
 
@@ -43,12 +43,12 @@ Output should include:
 
 Also try pulling an image via the proxy:
 
-`docker pull $PROXY_DOMAIN/opensafely/cohortextractor`
+`docker pull $PROXY_DOMAIN/opensafely-core/cohortextractor`
 
 This should pull the image from ghcr.io, but proxied via this nginx proxy.
 
 Note that the images will be tagged locally by docker client as
-`$PROXY_DOMAIN/opensafely/<name>`, not their official
-`ghcr.io/opensafely/<name>` tag. This is sadly unavoidable without some kind of
+`$PROXY_DOMAIN/opensafely-core/<name>`, not their official
+`ghcr.io/opensafely-core/<name>` tag. This is sadly unavoidable without some kind of
 MITM certificate for ghcr.io, as the docker client only communicates over
 HTTPS.
