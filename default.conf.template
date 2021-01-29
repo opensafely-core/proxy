@@ -13,8 +13,8 @@ map $upstream_http_www_authenticate $auth_header {
         ~(.*)ghcr.io(.*)            $1${PROXY_DOMAIN}$2;
 }
 
-proxy_http_version 1.1; # keep alives to gchr.io
-proxy_buffering off;    # start streaming response immeadiately
+proxy_http_version 1.1; # keep alives to upstream
+proxy_buffering off;    # start streaming response immediately
 #error_log /var/log/nginx/error-debug.log debug;
 
 server {
@@ -45,6 +45,17 @@ server {
 
     # opensafely images only, and handle redirects
     location /v2/opensafely/ {
+        limit_except GET { deny all; }
+        proxy_pass https://ghcr.io;
+        # ghcr.io redirects to an S3 bucket, which is not accessible from
+        # backends. So handle redirects to S3 here in the proxy rather than
+        # passing back to the client
+        proxy_intercept_errors on;
+        error_page 301 302 307 = @handle_redirect;
+    }
+
+    # opensafely-core images only, and handle redirects
+    location /v2/opensafely-core/ {
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
         # ghcr.io redirects to an S3 bucket, which is not accessible from
