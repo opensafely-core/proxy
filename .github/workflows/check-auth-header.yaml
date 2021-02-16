@@ -3,8 +3,9 @@ on:
   schedule:
     # 09:00 UTC every day
     - cron: '0 9 * * *'
+  workflow_dispatch:
 env:
-    EXPECTED: 'realm="https://ghcr.io/token",service="ghcr.io",scope="repository:user/image:pull"'
+  EXPECTED: 'realm="https://ghcr.io/token",service="ghcr.io",scope="repository:user/image:pull"'
 jobs:
   check:
     runs-on: ubuntu-latest
