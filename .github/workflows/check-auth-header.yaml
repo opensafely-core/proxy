@@ -13,4 +13,4 @@ jobs:
     - name: checkout
       uses: actions/checkout@master
     - name: check
-      run: python3 check-header.sh
+      run: python3 check-header.py
