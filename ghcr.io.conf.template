@@ -1,7 +1,7 @@
-# PROXY_DOMAIN: user visible domain, e.g. docker.opensafely.org, which hosted by cloudflare
-# PROXY_ORIGIN: the backend, e.g. docker-proxy.dokku2.ebmdatalab.org
-# RESOLVER: DNS resolver for dynamically looking up redirect domains
-# PORT: provided by dokku, defaults to 80
+# Read-only proxy certain organisation to ghcr.io
+#
+# RESOLVER:a DNS resolver for dynamically looking up redirect domains. Defaults to 127.0.0.1
+# PORT: defaults to 8080, but dokku can override
 
 # The docker cli uses the realm domain given in the www-authenticate to auth.
 # So we need to re-write from ghcr.io to our proxy.
@@ -9,28 +9,31 @@
 # Ideally would use more-headers module, but its not in the default image.
 map $upstream_http_www_authenticate $auth_header {
         # used to have 1 occurance of domain, now has 2. Handle both.
-        ~(.*)ghcr.io(.*)ghcr.io(.*) $1${PROXY_DOMAIN}$2${PROXY_DOMAIN}$3;
-        ~(.*)ghcr.io(.*)            $1${PROXY_DOMAIN}$2;
+        ~(.*)ghcr.io(.*)ghcr.io(.*) $1docker-proxy.opensafely.org$2docker-proxy.opensafely.org$3;
+        ~(.*)ghcr.io(.*)            $1docker-proxy.opensafely.org$2;
 }
 
+# these need to be global, sadly
 proxy_http_version 1.1; # keep alives to upstream
 proxy_buffering off;    # start streaming response immediately
-#error_log /var/log/nginx/error-debug.log debug;
 
 server {
 
-    # be identified by either domain
-    server_name ${PROXY_DOMAIN} ${PROXY_ORIGIN};
+    # note: embdatalab domain is for when we are being proxied by cloudflare
+    server_name docker-proxy.opensafely.org docker-proxy.dokku2.embdatalab.net;
     root /var/www/html;
     listen ${PORT};
 
-    # we need a resolver configured so we can look up domains when redirecting
+    # We need a resolver configured so we can dynamically look up domains when
+    # redirecting. We make it an env var so that we can switch it out in prod
+    # for the Digital Ocean resolver
     resolver ${RESOLVER};
 
     # exact match, initial query, rewrite www-authentication header
     location = /v2/ {
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
+        proxy_redirect default;
         # hide upstream header
         proxy_hide_header www-authenticate;
         # add our modified header 
@@ -41,23 +44,14 @@ server {
     location /token {
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
+        proxy_redirect default;
     }
 
     # opensafely images only, and handle redirects
-    location /v2/opensafely/ {
+    location ~ /v2/opensafely-core/ {
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
-        # ghcr.io redirects to an S3 bucket, which is not accessible from
-        # backends. So handle redirects to S3 here in the proxy rather than
-        # passing back to the client
-        proxy_intercept_errors on;
-        error_page 301 302 307 = @handle_redirect;
-    }
-
-    # opensafely-core images only, and handle redirects
-    location /v2/opensafely-core/ {
-        limit_except GET { deny all; }
-        proxy_pass https://ghcr.io;
+        proxy_redirect default;
         # ghcr.io redirects to an S3 bucket, which is not accessible from
         # backends. So handle redirects to S3 here in the proxy rather than
         # passing back to the client
@@ -77,7 +71,7 @@ server {
     location /v2/ {
         limit_except GET { deny all; }
         # 404 any other /v2/<org> paths in a way that the docker client understands
-        add_header 'Content-Type' 'application/json charset=UTF-8';
+        add_header 'Content-Type' 'application/json; charset=UTF-8' always;
         return 404 '{ "errors": [{"code": "NAME_UNKNOWN", "message": "only opensafely repositories allowed" }] }';
     }
 }
