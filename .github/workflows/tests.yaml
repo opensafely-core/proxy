@@ -1,0 +1,15 @@
+name: Build docker image and publish
+on:
+  pull_request:
+env:
+  IMAGE_NAME: opensafely-proxy
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@master
+    - name: Build image
+      run: make build
+    - name: Run tests
+      run: make test

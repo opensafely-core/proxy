@@ -2,8 +2,9 @@ name: Build docker image and publish
 on:
   push:
     branches: [master]
+  workflow_dispatch:
 env:
-  IMAGE_NAME: docker-proxy
+  IMAGE_NAME: opensafely-proxy
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,7 +12,9 @@ jobs:
     - name: checkout
       uses: actions/checkout@master
     - name: Build image
-      run: docker build . --file Dockerfile --tag $IMAGE_NAME
+      run: make build
+    - name: Run tests
+      run: make test
     - name: Log into GitHub Container Registry
       run: docker login https://ghcr.io -u ${{ github.actor }} --password ${{ secrets.CR_PAT }}
     - name: Push image to GitHub Container Registry

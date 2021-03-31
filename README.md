@@ -1,54 +1,45 @@
-# Docker Proxy for ghcr.io
+# Proxy servers for OpenSAFELY
 
-This hosts the Dockerfile for building an nginx docker image that will proxy
-traffic to ghcr.io for the OpenSAFELY project.
+To secure and limit access to external services, the OpenSAFELY platform
+maintains a proxy service. OpenSAFELY backends explicitly use these proxies
+when they need to access external data.
 
-OpenSAFELY publishes its open docker images via ghcr.io, which are needed by
-backends to run OpenSAFELY studies. However, we don't want to require backends
-to allow network access to ghcr.io, as that could in theory be used to
-exfiltrate data.
+This repository produces a Docker image that uses nginx to host two proxy
+domains:
+ 
+ * github-proxy.opensafely.org: this provides access to *only* opensafely
+   repositories hosted on https://github.com, and not other repositories.
 
-So this proxy provides a single point of read-only access to only the
-OpenSAFELY images on ghcr.io, by only proxying GET requests to /v2/opensafely/
-urls.
+ * docker-proxy.opensafely.org: this provides read only access to docker images
+   published by specific organistions on https://ghcr.io, the Github Container
+   Registry, where the docker images for running the study code are stored.
 
 
 ## Building
 
 To build:
 
-`docker build . -t ghcr.io/opensafely-core/docker-proxy`
+    docker build . -t ghcr.io/opensafely-core/opensafely-proxy
 
-Config is supplied via env vars:
+By default, it uses 127.0.0.1 as a DNS resolver, and runs on port 8080. You can
+override those values with the environment variables RESOLVER and PORT
+respectively. 
 
- - `PROXY_DOMAIN`: user visible domain, e.g. docker.opensafely.org, which hosted by cloudflare
- - `PROXY_ORIGIN`: the backend, e.g. docker-proxy.dokku2.ebmdatalab.org
- - `RESOLVER`: DNS resolver for dynamically looking up redirect domains
- - `PORT`: provided by dokku, defaults to 80
+or
 
-To run locally:
+    docker run -d --rm ghcr.io/opensafely-core/opensafely-proxy
 
-`docker run -d  -e PROXY_DOMAIN=<domain> -e PROXY_ORIGIN=<origin> -e RESOLVER=127.0.0.1 -e PORT=80 ghcr.io/opensafely-core/docker-proxy`
 
 ## Testing 
 
-To quickly test, check that the realm in the www-authenticate header is
-correct:
+To run basic tests:
 
-`curl -v docker-proxy.opensafely.org/v2/ |& grep Www-Auth`
+    make test
 
-Output should include:
+This will build and run the image and run ./ci-tests.sh, which is basic http tests.
 
-`Bearer realm="https://$PROXY_DOMAIN/token",service="$PROXY_DOMAIN",scope="repository:user/image:pull"`
+Full integraton tests can only be run against the current production
+deployment, as it requires TLS and DNS:
 
-Also try pulling an image via the proxy:
+    ./full-tests.sh
 
-`docker pull $PROXY_DOMAIN/opensafely-core/cohortextractor`
-
-This should pull the image from ghcr.io, but proxied via this nginx proxy.
-
-Note that the images will be tagged locally by docker client as
-`$PROXY_DOMAIN/opensafely-core/<name>`, not their official
-`ghcr.io/opensafely-core/<name>` tag. This is sadly unavoidable without some kind of
-MITM certificate for ghcr.io, as the docker client only communicates over
-HTTPS.
