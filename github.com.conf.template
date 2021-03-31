@@ -1,0 +1,31 @@
+# Proxy git's smart http protocol to only certain organisations on github.com.
+#
+# https://git-scm.com/docs/http-protocol
+#
+# The git http protocol design makes it non-trivial to distinguish between push
+# and pull - they are identical in terms of http verb and path.
+# 
+# We are keen to block push, but in practice we still need so support it for
+# now. We may be able to limit it by restricting the client_max_body_size to
+# very small size in future.
+server {
+
+    server_name github-proxy.opensafely.org;
+    root /var/www/html/;
+    listen ${PORT};
+
+    # The default nginx request body size is 1M, we make it explicit and bump
+    # to support current use cases
+    client_max_body_size 2M;
+
+    # only opensafely and opensafley-core orgs can be accessed
+    location ~ /(opensafely|opensafely-core)/.*/(info|git-upload-pack|git-receive-pack) {
+        proxy_pass https://github.com;
+        proxy_redirect default;
+    }
+
+    location / {
+        add_header 'Content-Type' 'text/plain; charset=UTF-8' always;
+        return 403 'Only specific github organisations are supported by this proxy.';
+    }
+}
