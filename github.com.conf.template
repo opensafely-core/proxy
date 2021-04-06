@@ -18,8 +18,8 @@ server {
     # to support current use cases
     client_max_body_size 2M;
 
-    # only opensafely and opensafley-core orgs can be accessed
-    location ~ /(opensafely|opensafely-core)/.*/(info|git-upload-pack|git-receive-pack) {
+    # only opensafely and opensafely-core orgs can be accessed
+    location ~ ^/(opensafely|opensafely-core)/.*/(info|git-upload-pack|git-receive-pack) {
         proxy_pass https://github.com;
         proxy_redirect default;
     }

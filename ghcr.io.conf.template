@@ -48,7 +48,7 @@ server {
     }
 
     # opensafely images only, and handle redirects
-    location ~ /v2/opensafely-core/ {
+    location /v2/opensafely-core/ {
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
         proxy_redirect default;
