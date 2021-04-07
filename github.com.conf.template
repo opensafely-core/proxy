@@ -19,10 +19,18 @@ server {
     client_max_body_size 2M;
 
     # only opensafely and opensafely-core orgs can be accessed
-    location ~ ^/(opensafely|opensafely-core)/.*/(info|git-upload-pack|git-receive-pack) {
+    # location regex cannot match on query parameters
+    location ~ ^/(opensafely|opensafely-core)/[^/]+/info/refs {
+        if ($args !~ "service=git-(upload|receive)-pack") { return 404; }
         proxy_pass https://github.com;
         proxy_redirect default;
     }
+
+    location ~ ^/(opensafely|opensafely-core)/[^/]+/git-(upload|receive)-pack {
+        proxy_pass https://github.com;
+        proxy_redirect default;
+    }
+
 
     location / {
         add_header 'Content-Type' 'text/plain; charset=UTF-8' always;

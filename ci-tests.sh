@@ -87,6 +87,8 @@ try github-proxy.opensafely.org/opensafely/documentation/info/refs?service=git-u
 assert-header 'X-GitHub-Request-Id:'
 # test we cannot access other parts of the repo
 try github-proxy.opensafely.org/opensafely/documentation 403
+# test we cannot access other /info/refs queries
+try github-proxy.opensafely.org/opensafely/documentation/info/refs?foo=bar 404
 
 # test for opensafely-core org
 try github-proxy.opensafely.org/opensafely-core/job-runner/info/refs?service=git-upload-pack 200
