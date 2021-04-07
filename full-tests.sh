@@ -6,10 +6,14 @@ tmp=$(mktemp -d)
 trap 'rm -rf $tmp' EXIT
 
 # test valid repos
-git clone https://github-proxy.opensafely.org/opensafely/documentation "$tmp/"
-git clone https://github-proxy.opensafely.org/opensafely-core/job-runner "$tmp/"
+git clone https://github-proxy.opensafely.org/opensafely/documentation "$tmp/documentation"
+git clone https://github-proxy.opensafely.org/opensafely-core/job-runner "$tmp/job-runner"
 
-git clone https://github-proxy.opensafely.org/torvalds/linux "$tmp/" && { echo "ERROR: cloned torvalds/linux!"; exit 1; }
+if git clone https://github-proxy.opensafely.org/torvalds/linux "$tmp/linux"; then
+    echo "ERROR: succesful cloned torvalds/linux!"
+    exit 1
+fi
+
 
 # test we can push, not sure it is worth testing, as it needs creds
 #git -C "$tmp/documentation" checkout -b proxy-test-branch
@@ -19,7 +23,10 @@ git clone https://github-proxy.opensafely.org/torvalds/linux "$tmp/" && { echo "
 #git -C "$tmp/documentation" push origin proxy-test-branch --force
 #git -C "$tmp/documentation" push origin proxy-test-branch --delete
 
-docker pull https://docker-proxy.opensafely.org/opensafely-core/base-docker
+docker pull docker-proxy.opensafely.org/opensafely-core/base-docker
 
 # we shouldn't be allowed to pull opensafely images, just opensafely-core
-docker pull https://docker-proxy.opensafely.org/opensafely/busybox && { echo "ERROR: pulled opensafely/busybox image1"; exit 1; }
+if docker pull docker-proxy.opensafely.org/opensafely/busybox; then
+    echo "ERROR: succesfully pulled opensafely/busybox image"
+    exit 1
+fi
