@@ -11,8 +11,9 @@ domains:
    repositories hosted on https://github.com, and not other repositories.
 
  * docker-proxy.opensafely.org: this provides read only access to docker images
-   published by specific organistions on https://ghcr.io, the Github Container
-   Registry, where the docker images for running the study code are stored.
+   published by specific Github organistions on https://ghcr.io, the Github
+   Container Registry, where the docker images for running the study code are
+   stored.
 
 
 ## Building

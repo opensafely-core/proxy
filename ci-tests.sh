@@ -4,7 +4,7 @@ set -euo pipefail
 # proper functional tests until post deployment. And most tools require DNS in
 # order to hit the right vhost in nginx.
 #
-# So we use curl's --resolve opti0on to query the base APIs to check we get the
+# So we use curl's --resolve option to query the base APIs to check we get the
 # appropriate responses at the http level.
 #
 # see also: full-tests.sh, which can be run post deploy 
@@ -62,13 +62,13 @@ assert-body() {
     if test "$(cat "$body")" == "$expected"; then
         ok "$url returned expected body"
     else
-        fail "$url returned unexpected body:"
+        fail "$url returned unexpected body"
     fi
 }
 
 assert-header() {
     if test "$last_test_failed" = "1"; then
-        echo "SKIP assert body"
+        echo "SKIP assert header"
         return
     fi
     local expected=$1
