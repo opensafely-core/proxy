@@ -15,8 +15,8 @@ server {
     listen ${PORT};
 
     # The default nginx request body size is 1M, we make it explicit and bump
-    # to support current use cases
-    client_max_body_size 2M;
+    # to support current use case of publishing results to github
+    client_max_body_size 128M;
 
     # only opensafely and opensafely-core orgs can be accessed
     # location regex cannot match on query parameters
@@ -31,6 +31,10 @@ server {
         proxy_redirect default;
     }
 
+    location ~ ^/[^/]+\.keys {
+        proxy_pass https://github.com;
+        proxy_redirect default;
+    }
 
     location / {
         add_header 'Content-Type' 'text/plain; charset=UTF-8' always;

@@ -53,13 +53,13 @@ try() {
 }
 
 
-assert-body() {
+assert-in-body() {
     if test "$last_test_failed" = "1"; then
         echo "SKIP assert body"
         return
     fi
     local expected=$1
-    if test "$(cat "$body")" == "$expected"; then
+    if grep -sq -F "$expected" "$body"; then
         ok "$url returned expected body"
     else
         fail "$url returned unexpected body"
@@ -98,21 +98,25 @@ try github-proxy.opensafely.org/opensafely-core/job-runner 403
 
 # test other orgs are 403'd, even when they exist
 try github-proxy.opensafely.org/torvalds/linux/info/refs?service=git-upload-pack 403
-assert-body 'Only specific github organisations are supported by this proxy.';
+assert-in-body 'Only specific github organisations are supported by this proxy.';
 assert-header 'Content-Type: text/plain; charset=UTF-8'
 
+# test keys
+try github-proxy.opensafely.org/bloodearnest.keys 200
+assert-in-body ed25519
 
 ### docker-proxy.opensafely.org ###
 
 # test the initial docker request is rewritten correctly
 try docker-proxy.opensafely.org/v2/ 401
-assert-body '{"errors":[{"code":"UNAUTHORIZED","message":"authentication required"}]}'
+assert-in-body '{"errors":[{"code":"UNAUTHORIZED","message":"authentication required"}]}'
 assert-header 'X-GitHub-Request-Id:'
 assert-header 'Www-Authenticate: Bearer realm="https://docker-proxy.opensafely.org/token",service="docker-proxy.opensafely.org",scope="repository:user/image:pull"'
 
 # test other projects are 404'd
 try docker-proxy.opensafely.org/v2/other/project 404 
-assert-body '{ "errors": [{"code": "NAME_UNKNOWN", "message": "only opensafely repositories allowed" }] }';
+assert-in-body '{ "errors": [{"code": "NAME_UNKNOWN", "message": "only opensafely repositories allowed" }] }';
 assert-header 'Content-Type: application/json; charset=UTF-8'
+
 
 exit $return_code
