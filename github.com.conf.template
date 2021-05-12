@@ -18,6 +18,10 @@ server {
     # to support current use case of publishing results to github
     client_max_body_size 128M;
 
+    proxy_http_version 1.1;       # keep alives to upstream
+    proxy_buffering off;          # start streaming response immediately
+    proxy_request_buffering off;  # support chunked transfer
+
     # only opensafely and opensafely-core orgs can be accessed
     # location regex cannot match on query parameters
     location ~ ^/(opensafely|opensafely-core)/[^/]+/info/refs {

@@ -13,9 +13,6 @@ map $upstream_http_www_authenticate $auth_header {
         ~(.*)ghcr.io(.*)            $1docker-proxy.opensafely.org$2;
 }
 
-# these need to be global, sadly
-proxy_http_version 1.1; # keep alives to upstream
-proxy_buffering off;    # start streaming response immediately
 
 server {
 
@@ -28,6 +25,9 @@ server {
     # redirecting. We make it an env var so that we can switch it out in prod
     # for the Digital Ocean resolver
     resolver ${RESOLVER};
+
+    proxy_http_version 1.1; # keep alives to upstream
+    proxy_buffering off;    # start streaming response immediately
 
     # exact match, initial query, rewrite www-authentication header
     location = /v2/ {
