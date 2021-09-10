@@ -20,13 +20,13 @@ server {
 
     # only opensafely, opensafely-core, and opensafely-actions orgs can be accessed
     # location regex cannot match on query parameters
-    location ~ ^/(opensafely|opensafely-core|opensafely-actions)/[^/]+/info/refs {
+    location ~ ^/(${ORGS})/[^/]+/info/refs {
         if ($args !~ "service=git-(upload|receive)-pack") { return 404; }
         proxy_pass https://github.com;
         proxy_redirect default;
     }
 
-    location ~ ^/(opensafely|opensafely-core|opensafely-actions)/[^/]+/git-(upload|receive)-pack {
+    location ~ ^/(${ORGS})/[^/]+/git-(upload|receive)-pack {
         proxy_pass https://github.com;
         proxy_redirect default;
     }
