@@ -1,4 +1,4 @@
-name: Build docker image and publish
+name: Build docker image, test, publish, and deploy
 on:
   push:
     branches: [master]
@@ -22,3 +22,9 @@ jobs:
         IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
         docker tag $IMAGE_NAME $IMAGE_ID:latest
         docker push $IMAGE_ID:latest
+    - name: Deploy
+      run: |
+          echo "${{ secrets.DOKKU2_DEPLOY_SSH_KEY }}" > ~/.ssh/dokku2
+          IMAGE="ghcr.io/opensafely-core/$IMAGE_NAME:latest"
+          ssh -i ~/.ssh/dokku2 dokku@dokku2.ebmdatalab.net "docker pull $IMAGE && docker tag $IMAGE dokku/proxy && dokku tags:deploy proxy"
+
