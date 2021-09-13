@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 env:
   IMAGE_NAME: opensafely-proxy
+  SSH_AUTH_SOCK: /tmp/agent.sock
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,9 +23,12 @@ jobs:
         IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
         docker tag $IMAGE_NAME $IMAGE_ID:latest
         docker push $IMAGE_ID:latest
+    - name: Setup SSH Agent
+      run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.DOKKU2_DEPLOY_SSH_KEY }}"
     - name: Deploy
       run: |
-          echo "${{ secrets.DOKKU2_DEPLOY_SSH_KEY }}" > /tmp/dokku2
           IMAGE="ghcr.io/opensafely-core/$IMAGE_NAME:latest"
-          ssh -i /tmp/dokku2 dokku@dokku2.ebmdatalab.net "docker pull $IMAGE && docker tag $IMAGE dokku/proxy && dokku tags:deploy proxy"
+          ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" dokku@dokku2.ebmdatalab.net "docker pull $IMAGE && docker tag $IMAGE dokku/proxy && dokku tags:deploy proxy"
 
