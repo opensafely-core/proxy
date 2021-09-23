@@ -26,7 +26,9 @@ fi
 docker pull docker-proxy.opensafely.org/opensafely-core/base-docker
 
 # we shouldn't be allowed to pull opensafely images, just opensafely-core
-if docker pull docker-proxy.opensafely.org/opensafely/busybox; then
+code=0
+docker pull docker-proxy.opensafely.org/opensafely/busybox 2>/dev/null || code=$?
+if test "$code" = "0"; then
     echo "ERROR: succesfully pulled opensafely/busybox image"
     exit 1
 fi
