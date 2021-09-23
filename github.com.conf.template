@@ -8,6 +8,8 @@
 # We are keen to block push, but in practice we still need so support it for
 # now. We may be able to limit it by restricting the client_max_body_size to
 # very small size in future.
+
+
 server {
 
     server_name github-proxy.opensafely.org;
@@ -17,6 +19,8 @@ server {
     # The default nginx request body size is 1M, we make it explicit and bump
     # to support current use case of publishing results to github
     client_max_body_size 128M;
+
+    proxy_buffering off;    # start streaming response immediately
 
     # only opensafely, opensafely-core, and opensafely-actions orgs can be accessed
     # location regex cannot match on query parameters
