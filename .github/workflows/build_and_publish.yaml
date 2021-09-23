@@ -6,6 +6,7 @@ on:
 env:
   IMAGE_NAME: opensafely-proxy
   SSH_AUTH_SOCK: /tmp/agent.sock
+  IMAGE_ID: ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,7 +21,6 @@ jobs:
       run: docker login https://ghcr.io -u ${{ github.actor }} --password ${{ secrets.DOCKER_RW_TOKEN }}
     - name: Push image to GitHub Container Registry
       run: |
-        IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
         docker tag $IMAGE_NAME $IMAGE_ID:latest
         docker push $IMAGE_ID:latest
     - name: Setup SSH Agent
@@ -29,6 +29,5 @@ jobs:
           ssh-add - <<< "${{ secrets.DOKKU2_DEPLOY_SSH_KEY }}"
     - name: Deploy
       run: |
-          IMAGE="ghcr.io/opensafely-core/$IMAGE_NAME:latest"
-          ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" dokku@dokku2.ebmdatalab.net "docker pull $IMAGE && docker tag $IMAGE dokku/proxy && dokku tags:deploy proxy"
+          ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" dokku@dokku2.ebmdatalab.net git:from-image proxy $IMAGE_ID
 
