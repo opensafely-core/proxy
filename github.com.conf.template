@@ -20,7 +20,11 @@ server {
     # to support current use case of publishing results to github
     client_max_body_size 128M;
 
-    proxy_buffering off;    # start streaming response immediately
+    # no buffering
+    proxy_buffering off;
+    proxy_request_buffering off;
+    chunked_transfer_encoding on;
+
 
     # only opensafely, opensafely-core, and opensafely-actions orgs can be accessed
     # location regex cannot match on query parameters

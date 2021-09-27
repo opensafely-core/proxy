@@ -23,7 +23,10 @@ server {
     root /var/www/html;
     listen ${PORT};
 
-    proxy_buffering off;    # start streaming response immediately
+    # no buffering
+    proxy_buffering off;
+    proxy_request_buffering off;
+    chunked_transfer_encoding on;
 
     # We need a resolver configured so we can dynamically look up domains when
     # redirecting. We make it an env var so that we can switch it out in prod
