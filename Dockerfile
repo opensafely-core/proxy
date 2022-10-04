@@ -1,5 +1,5 @@
 FROM nginx:1.19.9
-ENV RESOLVER=127.0.0.1 PORT=8080
+ENV PORT=8080
 # Default orgs, must be pipe separated as are fed into a regex match
 # Can be overridden via run time env var
 ENV ORGS=opensafely|opensafely-core|opensafely-actions|graphnet-opensafely

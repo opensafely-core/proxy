@@ -25,23 +25,51 @@ server {
     proxy_request_buffering off;
     chunked_transfer_encoding on;
 
+    # We need a resolver configured so we can dynamically look up domains when
+    # redirecting. We make it an env var so that we can switch it out in prod
+    # for the Digital Ocean resolver
+    resolver ${RESOLVER};
 
     # only opensafely, opensafely-core, and opensafely-actions orgs can be accessed
     # location regex cannot match on query parameters
+
+    # basic git operations
     location ~ ^/(${ORGS})/[^/]+/info/refs {
         if ($args !~ "service=git-(upload|receive)-pack") { return 404; }
         proxy_pass https://github.com;
         proxy_redirect default;
     }
 
+    # basic git operations
     location ~ ^/(${ORGS})/[^/]+/git-(upload|receive)-pack {
         proxy_pass https://github.com;
         proxy_redirect default;
     }
 
+    # allow ssh keys to be retreived for a user
     location ~ ^/[^/]+\.keys {
+        limit_except GET { deny all; }
         proxy_pass https://github.com;
         proxy_redirect default;
+    }
+
+    # allow release artifcats to be download from specific repo only
+    location ~ ^/opensafely-core/backend-server/releases/download {
+        limit_except GET { deny all; }
+        proxy_pass https://github.com;
+        proxy_redirect default;
+        # releases download redirects to an S3 bucket, which is not accessible from
+        # backends. So handle redirects to S3 here in the proxy rather than
+        # passing back to the client
+        proxy_intercept_errors on;
+        error_page 301 302 307 = @handle_redirect;
+    }
+
+    location @handle_redirect {
+        # set saves the initial response's Location: header
+        set $redirect '$upstream_http_location';
+        # proxy the AWS location back to the client
+        proxy_pass $redirect;
     }
 
     location / {
