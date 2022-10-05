@@ -8,7 +8,8 @@ This repository produces a Docker image that uses nginx to host two proxy
 domains:
  
  * github-proxy.opensafely.org: this provides access to *only* opensafely
-   repositories hosted on https://github.com, and not other repositories.
+   repositories hosted on https://github.com, and not other repositories. It
+   also restricts access to certain paths within those organisations.
 
  * docker-proxy.opensafely.org: this provides read only access to docker images
    published by specific Github organistions on https://ghcr.io, the Github
@@ -17,19 +18,21 @@ domains:
 
 
 ## Building
+ 
+To build
 
-To build:
+    make build
 
-    docker build . -t ghcr.io/opensafely-core/opensafely-proxy
+## Running
 
-By default, it uses 127.0.0.1 as a DNS resolver, and runs on port 8080. You can
-override those values with the environment variables RESOLVER and PORT
-respectively. 
+Because we use handle redirects dyanmically, we need to configure a DNS
+resolver at run time. The Makefile uses 127.0.0.53 by default, assumes you are
+running modern Ubuntu, you may need to use something different
 
-or
+    make run [RESOLVER=...]
 
-    docker run -d --rm ghcr.io/opensafely-core/opensafely-proxy
-
+This will run the container in docker on port 8080. It uses --network=host in
+order to have access to the hosts resolver at 127.0.0.53
 
 ## Testing 
 
@@ -37,10 +40,10 @@ To run basic tests:
 
     make test
 
-This will build and run the image and run ./ci-tests.sh, which is basic http tests.
+This will build and run the image and run ./ci-tests.sh, which is basic http
+tests.
 
 Full integraton tests can only be run against the current production
 deployment, as it requires TLS and DNS:
 
     ./full-tests.sh
-

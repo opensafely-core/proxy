@@ -38,8 +38,8 @@ try() {
 
     code="$(
         curl --verbose --output "$body" \
-        --resolve github-proxy.opensafely.org:80:127.0.0.1 \
-        --resolve docker-proxy.opensafely.org:80:127.0.0.1 \
+        --connect-to github-proxy.opensafely.org:80:127.0.0.1:8080 \
+        --connect-to docker-proxy.opensafely.org:80:127.0.0.1:8080 \
         --write-out "%{http_code}"\
         "$url" \
         2> "$headers"
@@ -112,6 +112,10 @@ assert-header 'Content-Type: text/plain; charset=UTF-8'
 # test keys
 try github-proxy.opensafely.org/bloodearnest.keys 200
 assert-in-body ed25519
+
+# test download
+try github-proxy.opensafely.org/opensafely-core/backend-server/releases/download/v0.1/test-download 200
+assert-in-body test
 
 ### docker-proxy.opensafely.org ###
 
