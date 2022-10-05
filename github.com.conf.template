@@ -53,12 +53,12 @@ server {
         proxy_redirect default;
     }
 
-    # allow release artifcats to be download from specific repo only
+    # allow release artifacts to be downloaded from specified repo only
     location ~ ^/opensafely-core/backend-server/releases/download {
         limit_except GET { deny all; }
         proxy_pass https://github.com;
         proxy_redirect default;
-        # releases download redirects to an S3 bucket, which is not accessible from
+        # `releases/download` redirects to an S3 bucket, which is not accessible from
         # backends. So handle redirects to S3 here in the proxy rather than
         # passing back to the client
         proxy_intercept_errors on;
