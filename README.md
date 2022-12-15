@@ -4,7 +4,7 @@ To secure and limit access to external services, the OpenSAFELY platform
 maintains a proxy service. OpenSAFELY backends explicitly use these proxies
 when they need to access external data.
 
-This repository produces a Docker image that uses nginx to host two proxy
+This repository produces a Docker image that uses nginx to host three proxy
 domains:
  
  * github-proxy.opensafely.org: this provides access to *only* opensafely
@@ -15,6 +15,9 @@ domains:
    published by specific Github organistions on https://ghcr.io, the Github
    Container Registry, where the docker images for running the study code are
    stored.
+
+ * opencodelists-proxy.opensafely.org: this provides access to a single OpenCodelists
+   API endpoint.
 
 
 ## Building
