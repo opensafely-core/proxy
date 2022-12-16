@@ -40,6 +40,7 @@ try() {
         curl --verbose --output "$body" \
         --connect-to github-proxy.opensafely.org:80:127.0.0.1:8080 \
         --connect-to docker-proxy.opensafely.org:80:127.0.0.1:8080 \
+        --connect-to opencodelists-proxy.opensafely.org:80:127.0.0.1:8080 \
         --write-out "%{http_code}"\
         "$url" \
         2> "$headers"
@@ -130,5 +131,9 @@ try docker-proxy.opensafely.org/v2/other/project 404
 assert-in-body '{ "errors": [{"code": "NAME_UNKNOWN", "message": "only opensafely repositories allowed" }] }';
 assert-header 'Content-Type: application/json; charset=UTF-8'
 
+### opencodelists-proxy.opensafely.org ###
+
+try opencodelists-proxy.opensafely.org/api/v1/dmd-mapping/ 200
+try opencodelists-proxy.opensafely.org/api/v1/codelist/ 404
 
 exit $return_code

@@ -7,7 +7,7 @@ build: Dockerfile
 	docker build . -t $(IMAGE_NAME)
 
 .PHONY: run
-run:
+run: build
 	docker kill $(IMAGE_NAME) && sleep 1 || true
 	docker run -d --rm -e RESOLVER -e PORT --network=host --name $(IMAGE_NAME) $(IMAGE_NAME)
 	sleep 1
