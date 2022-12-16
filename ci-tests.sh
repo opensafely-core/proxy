@@ -135,5 +135,6 @@ assert-header 'Content-Type: application/json; charset=UTF-8'
 
 try opencodelists-proxy.opensafely.org/api/v1/dmd-mapping/ 200
 try opencodelists-proxy.opensafely.org/api/v1/codelist/ 404
+try opencodelists-proxy.opensafely.org/api/v1/dmd-mapping/../codelist/ 404
 
 exit $return_code
