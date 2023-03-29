@@ -16,9 +16,9 @@ server {
     root /var/www/html/;
     listen ${PORT};
 
-    # The default nginx request body size is 1M, we make it explicit and bump
-    # to support current use case of publishing results to github
-    client_max_body_size 128M;
+    # The default nginx request body size is 1M. We only want to support git
+    # clone, which only requires a few 100 bytes.
+    client_max_body_size 1K;
 
     # no buffering
     proxy_buffering off;
@@ -33,15 +33,17 @@ server {
     # only opensafely, opensafely-core, and opensafely-actions orgs can be accessed
     # location regex cannot match on query parameters
 
-    # basic git operations
+    # basic git metadata operations
     location ~ ^/(${ORGS})/[^/]+/info/refs {
-        if ($args !~ "service=git-(upload|receive)-pack") { return 404; }
+        limit_except GET { deny all; }
+        if ($args !~ "service=git-upload-pack") { return 403; }
         proxy_pass https://github.com;
         proxy_redirect default;
     }
 
-    # basic git operations
-    location ~ ^/(${ORGS})/[^/]+/git-(upload|receive)-pack {
+    # git clone
+    location ~ ^/(${ORGS})/[^/]+/git-upload-pack {
+        limit_except POST { deny all; }
         proxy_pass https://github.com;
         proxy_redirect default;
     }
