@@ -77,6 +77,6 @@ server {
 
     location / {
         add_header 'Content-Type' 'text/plain; charset=UTF-8' always;
-        return 403 'Only specific github organisations are supported by this proxy.';
+        return 403 'This proxy only supports fetching commits from specific github organisations.';
     }
 }
