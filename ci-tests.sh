@@ -53,7 +53,34 @@ try() {
     fi
 }
 
+git-post() {
+    # reset tests
+    last_test_failed=0
+ 
+    type_=$1
+    url=$2
+    local expected=$3
 
+    code="$(
+        curl --verbose --output "$body" -X POST \
+        -H "accept-encoding: deflate, gzip, br, zstd" \
+        -H "content-type: application/x-$type_-request" \
+        -H "accept: application/x-$type_-result" \
+        -H "git-protocol: version=2" \
+        --connect-to github-proxy.opensafely.org:80:127.0.0.1:8080 \
+        --write-out "%{http_code}"\
+        "$url" \
+        2> "$headers"
+    )"
+
+    if test "$code" != "$expected"; then
+        fail "$url returned $code, not $expected"
+    else
+        ok "$url returned $code"
+    fi
+}
+
+    
 assert-in-body() {
     if test "$last_test_failed" = "1"; then
         echo "SKIP assert body"
@@ -83,17 +110,27 @@ assert-header() {
 
 ### github-proxy.opensafely.org ###
 
-# test we can hit our org public repo's http protocol endpoints
+# test we can query the clone metadata endpoint
 try github-proxy.opensafely.org/opensafely/documentation/info/refs?service=git-upload-pack 200
 assert-header 'X-GitHub-Request-Id:'
+
+# test we can query the actul clone endpoint
+git-post git-upload-pack github-proxy.opensafely.org/opensafely/documentation/git-upload-pack 200
+assert-header 'X-GitHub-Request-Id:'
+
+
+# test we cannot query the push metadata endpoint
+try github-proxy.opensafely.org/opensafely/documentation/info/refs?service=git-receive-pack 403
+
+# test we cannot query the actual push endpoint
+git-post git-recieve-pack github-proxy.opensafely.org/opensafely/documentation/git-receive-pack 403
+
+
 # test we cannot access other parts of the repo
 try github-proxy.opensafely.org/opensafely/documentation 403
 # test we cannot access other /info/refs queries
-try github-proxy.opensafely.org/opensafely/documentation/info/refs?foo=bar 404
+try github-proxy.opensafely.org/opensafely/documentation/info/refs?foo=bar 403
 
-# test for opensafely-core org
-try github-proxy.opensafely.org/opensafely-core/job-runner/info/refs?service=git-upload-pack 200
-assert-header 'X-GitHub-Request-Id:'
 # test we cannot access other parts of the repo
 try github-proxy.opensafely.org/opensafely-core/job-runner 403
 
