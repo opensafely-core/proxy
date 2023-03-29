@@ -16,9 +16,10 @@ server {
     root /var/www/html/;
     listen ${PORT};
 
-    # The default nginx request body size is 1M. We only want to support git
-    # clone, which only requires a few 100 bytes.
-    client_max_body_size 1K;
+    # We `git fetch` commits from a persistant bare repo, which over time can
+    # mean sending a lot of local state up to github as part of fetchign. So
+    # this needs to be larger than you'd think
+    client_max_body_size 256K;
 
     # no buffering
     proxy_buffering off;

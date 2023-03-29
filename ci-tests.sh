@@ -114,8 +114,12 @@ assert-header() {
 try github-proxy.opensafely.org/opensafely/documentation/info/refs?service=git-upload-pack 200
 assert-header 'X-GitHub-Request-Id:'
 
-# test we can query the actul clone endpoint
+# test we can query the actul clone endpoint on public repo
 git-post git-upload-pack github-proxy.opensafely.org/opensafely/documentation/git-upload-pack 200
+assert-header 'X-GitHub-Request-Id:'
+
+# test we can query the actul clone endpoint on private repo
+git-post git-upload-pack github-proxy.opensafely.org/opensafely/server-instructions/git-upload-pack 401
 assert-header 'X-GitHub-Request-Id:'
 
 
