@@ -142,13 +142,9 @@ try github-proxy.opensafely.org/opensafely-core/job-runner 403
 try github-proxy.opensafely.org/opensafely-actions/safetab/info/refs?service=git-upload-pack 200
 assert-header 'X-GitHub-Request-Id:'
 
-# test for graphnet-opensafely org
-try github-proxy.opensafely.org/graphnet-opensafely/os-demo-research/info/refs?service=git-upload-pack 200
-assert-header 'X-GitHub-Request-Id:'
-
 # test other orgs are 403'd, even when they exist
 try github-proxy.opensafely.org/torvalds/linux/info/refs?service=git-upload-pack 403
-assert-in-body 'Only specific github organisations are supported by this proxy.';
+assert-in-body 'This proxy only supports fetching commits from specific github organisations.'
 assert-header 'Content-Type: text/plain; charset=UTF-8'
 
 # test keys
