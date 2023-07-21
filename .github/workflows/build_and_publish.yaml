@@ -1,7 +1,7 @@
 name: Build docker image, test, publish, and deploy
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch:
 env:
   SSH_AUTH_SOCK: /tmp/agent.sock
