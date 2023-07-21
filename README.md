@@ -24,7 +24,7 @@ domains:
  
 To build
 
-    make build
+    just build
 
 ## Running
 
@@ -32,7 +32,7 @@ Because we use handle redirects dyanmically, we need to configure a DNS
 resolver at run time. The Makefile uses 127.0.0.53 by default, assumes you are
 running modern Ubuntu, you may need to use something different
 
-    make run [RESOLVER=...]
+    just run [RESOLVER=...]
 
 This will run the container in docker on port 8080. It uses --network=host in
 order to have access to the hosts resolver at 127.0.0.53
@@ -41,7 +41,7 @@ order to have access to the hosts resolver at 127.0.0.53
 
 To run basic tests:
 
-    make test
+    just test
 
 This will build and run the image and run ./ci-tests.sh, which is basic http
 tests.
