@@ -1,4 +1,4 @@
-FROM nginx:1.19.9
+FROM nginx:1.25.2
 ENV PORT=8080
 # Default orgs, must be pipe separated as are fed into a regex match
 # Can be overridden via run time env var
