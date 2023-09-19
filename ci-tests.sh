@@ -41,6 +41,7 @@ try() {
         --connect-to github-proxy.opensafely.org:80:127.0.0.1:8080 \
         --connect-to docker-proxy.opensafely.org:80:127.0.0.1:8080 \
         --connect-to opencodelists-proxy.opensafely.org:80:127.0.0.1:8080 \
+        --connect-to honeycomb-api-proxy.opensafely.org:80:127.0.0.1:8080 \
         --write-out "%{http_code}"\
         "$url" \
         2> "$headers"
@@ -172,5 +173,8 @@ assert-header 'Content-Type: application/json; charset=UTF-8'
 
 try opencodelists-proxy.opensafely.org/api/v1/dmd-mapping/ 200
 try opencodelists-proxy.opensafely.org/api/v1/codelist/ 404
+
+try honeycomb-api-proxy.opensafely.org/1/markers/jobrunner 401
+assert-in-body 'unknown API key'
 
 exit $return_code
