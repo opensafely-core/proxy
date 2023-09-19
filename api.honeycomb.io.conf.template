@@ -1,0 +1,11 @@
+server {
+    server_name honeycomb-api-proxy.opensafely.org;
+    listen ${PORT};
+
+    # just allow markers
+    location /1/markers/ {
+        proxy_pass https://api.honeycomb.io;
+        proxy_ssl_server_name on;
+    }
+}
+
