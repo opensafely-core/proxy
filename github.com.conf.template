@@ -17,7 +17,7 @@ server {
     listen ${PORT};
 
     # We `git fetch` commits from a persistant bare repo, which over time can
-    # mean sending a lot of local state up to github as part of fetchign. So
+    # mean sending a lot of local state up to github as part of fetching. So
     # this needs to be larger than you'd think
     client_max_body_size 256K;
 
@@ -25,6 +25,11 @@ server {
     proxy_buffering off;
     proxy_request_buffering off;
     chunked_transfer_encoding on;
+
+    # github returns some large CSP headers
+    # we suspect that headers are *always* buffered, regardless of above
+    proxy_buffer_size 16k;
+    proxy_busy_buffers_size 16k;  # must be >= to proxy_buffer_size
 
     # We need a resolver configured so we can dynamically look up domains when
     # redirecting. We make it an env var so that we can switch it out in prod
