@@ -50,3 +50,11 @@ Full integraton tests can only be run against the current production
 deployment, as it requires TLS and DNS:
 
     ./full-tests.sh
+
+## Debug build
+
+Ir you `export IMAGE_NAME=proxy-debug`, just run/test will now use build of the
+image with nginx debug logs on, for diagnosing issues.
+
+
+
