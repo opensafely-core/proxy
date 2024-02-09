@@ -67,5 +67,5 @@ dokku:~$ dokku nginx:set proxy proxy-busy-buffers-size 16k
 =====> Setting proxy-busy-buffers-size to 16k
 dokku:~$ dokku nginx:set proxy proxy-buffer-size 16k
 =====> Setting proxy-buffer-size to 16k
-dokku:~$
+dokku:~$ dokku ps:restart proxy
 ```
