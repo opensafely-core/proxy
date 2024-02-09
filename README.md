@@ -56,5 +56,16 @@ deployment, as it requires TLS and DNS:
 If you `export IMAGE_NAME=proxy-debug`, just run/test will now use build of the
 image with nginx debug logs on, for diagnosing issues.
 
+## Deploying
 
+In order to successfully get user keys from Github, some buffer settings need to
+be tweaked - in both the conf file in this repo as well as the dokku config. You
+can do this thusly:
 
+```
+dokku:~$ dokku nginx:set proxy proxy-busy-buffers-size 16k
+=====> Setting proxy-busy-buffers-size to 16k
+dokku:~$ dokku nginx:set proxy proxy-buffer-size 16k
+=====> Setting proxy-buffer-size to 16k
+dokku:~$
+```
