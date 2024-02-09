@@ -53,7 +53,7 @@ deployment, as it requires TLS and DNS:
 
 ## Debug build
 
-Ir you `export IMAGE_NAME=proxy-debug`, just run/test will now use build of the
+If you `export IMAGE_NAME=proxy-debug`, just run/test will now use build of the
 image with nginx debug logs on, for diagnosing issues.
 
 
