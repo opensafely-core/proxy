@@ -25,6 +25,7 @@ server {
     proxy_buffering off;
     proxy_request_buffering off;
     chunked_transfer_encoding on;
+    proxy_buffer_size 16k;
 
     # We need a resolver configured so we can dynamically look up domains when
     # redirecting. We make it an env var so that we can switch it out in prod
