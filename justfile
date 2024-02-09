@@ -1,4 +1,4 @@
-export IMAGE_NAME := env_var_or_default('IMAGE_NAME', "proxy")
+export IMAGE_NAME := env_var_or_default('IMAGE_NAME', "opensafely-proxy")
 export RESOLVER := "127.0.0.53"
 export PORT := "8080"
 
