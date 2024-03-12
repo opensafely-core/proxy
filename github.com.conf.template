@@ -1,14 +1,6 @@
 # Proxy git's smart http protocol to only certain organisations on github.com.
 #
 # https://git-scm.com/docs/http-protocol
-#
-# The git http protocol design makes it non-trivial to distinguish between push
-# and pull - they are identical in terms of http verb and path.
-# 
-# We are keen to block push, but in practice we still need so support it for
-# now. We may be able to limit it by restricting the client_max_body_size to
-# very small size in future.
-
 
 server {
 
@@ -36,10 +28,11 @@ server {
     # for the Digital Ocean resolver
     resolver ${RESOLVER};
 
-    # only opensafely, opensafely-core, and opensafely-actions orgs can be accessed
-    # location regex cannot match on query parameters
+    # only the allowed orgs (currently opensafely, opensafely-core, and
+    # opensafely-actions) can be accessed
 
     # basic git metadata operations
+    # location regex cannot match on query parameters
     location ~ ^/(${ORGS})/[^/]+/info/refs {
         limit_except GET { deny all; }
         if ($args !~ "service=git-upload-pack") { return 403; }
@@ -47,7 +40,8 @@ server {
         proxy_redirect default;
     }
 
-    # git clone
+    # git clone requires a POST, sadly so we allow it to the specific url
+    # we are protected somewhat by the client_max_body_size limit
     location ~ ^/(${ORGS})/[^/]+/git-upload-pack {
         limit_except POST { deny all; }
         proxy_pass https://github.com;
