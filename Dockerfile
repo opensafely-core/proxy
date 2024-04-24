@@ -1,4 +1,4 @@
-FROM nginx:1.25.4 AS opensafely-proxy
+FROM nginx:1.26.0 AS opensafely-proxy
 ENV PORT=8080
 # Default orgs, must be pipe separated as are fed into a regex match
 # Can be overridden via run time env var
