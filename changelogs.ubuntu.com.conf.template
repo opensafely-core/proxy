@@ -1,0 +1,15 @@
+
+# Temporary proxy to changelogs.ubuntu.com to allow for upgrade
+#
+server {
+
+    server_name changelogs.ubuntu.com;
+    root /var/www/html;
+    listen ${PORT};
+
+    location / {
+        limit_except GET { deny all; }
+        proxy_pass https://changelogs.ubuntu.com;
+        proxy_redirect default;
+    }
+}
