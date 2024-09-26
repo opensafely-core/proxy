@@ -41,6 +41,7 @@ try() {
         --connect-to github-proxy.opensafely.org:80:127.0.0.1:8080 \
         --connect-to docker-proxy.opensafely.org:80:127.0.0.1:8080 \
         --connect-to opencodelists-proxy.opensafely.org:80:127.0.0.1:8080 \
+        --connect-to changelogs.ubuntu.com:80:127.0.0.1:8080 \
         --write-out "%{http_code}"\
         "$url" \
         2> "$headers"
@@ -172,5 +173,8 @@ assert-header 'Content-Type: application/json; charset=UTF-8'
 
 try opencodelists-proxy.opensafely.org/api/v1/dmd-mapping/ 200
 try opencodelists-proxy.opensafely.org/api/v1/codelist/ 404
+
+
+try changelogs.ubuntu.com/meta-release-lts 200
 
 exit $return_code
