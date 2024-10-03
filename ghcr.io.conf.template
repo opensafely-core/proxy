@@ -37,6 +37,8 @@ server {
     location = /v2/ {
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
+        # explicitly change host header to expected host
+        proxy_set_header Host ghcr.io;
         proxy_redirect default;
         # hide upstream header
         proxy_hide_header www-authenticate;
