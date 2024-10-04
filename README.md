@@ -19,6 +19,8 @@ domains:
  * opencodelists-proxy.opensafely.org: this provides access to a single OpenCodelists
    API endpoint.
 
+ * changelogs.opensafely.org: this allows us to use the do-release-upgrade tool
+   to perform major OS upgrades.
 
 ## Building
  

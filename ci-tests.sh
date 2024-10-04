@@ -117,7 +117,6 @@ assert-header() {
     fi
 }
 
-
 ### github-proxy.opensafely.org ###
 
 # test we can query the clone metadata endpoint
@@ -138,7 +137,6 @@ try github-proxy.opensafely.org/opensafely/documentation/info/refs?service=git-r
 
 # test we cannot query the actual push endpoint
 git-post git-recieve-pack github-proxy.opensafely.org/opensafely/documentation/git-receive-pack 403
-
 
 # test we cannot access other parts of the repo
 try github-proxy.opensafely.org/opensafely/documentation 403
@@ -193,10 +191,15 @@ try "docker-proxy.opensafely.org/v2/opensafely-core/busybox/blobs/$digest?" 200 
 
 ### opencodelists-proxy.opensafely.org ###
 
+# we should allow this specific call...
 try opencodelists-proxy.opensafely.org/api/v1/dmd-mapping/ 200
+
+# ...but not any others
 try opencodelists-proxy.opensafely.org/api/v1/codelist/ 404
 
+### changelogs.opensafely.org ###
 
+# This allows us to use the do-release-upgrade tool to perform major backend OS upgrades.
 try changelogs.opensafely.org/meta-release-lts 200
 
 exit $return_code
