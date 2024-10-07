@@ -35,17 +35,26 @@ try() {
     # global
     url=$1
     local expected=$2
+    local token=${3:-}
 
-    code="$(
-        curl --verbose --output "$body" \
-        --connect-to github-proxy.opensafely.org:80:127.0.0.1:8080 \
-        --connect-to docker-proxy.opensafely.org:80:127.0.0.1:8080 \
-        --connect-to opencodelists-proxy.opensafely.org:80:127.0.0.1:8080 \
-        --connect-to changelogs.opensafely.org:80:127.0.0.1:8080 \
-        --write-out "%{http_code}"\
-        "$url" \
-        2> "$headers"
-    )"
+    local curl_args=()
+
+    curl_args+=(-s --verbose --output "$body")
+    curl_args+=(--write-out "%{http_code}")
+    curl_args+=(--connect-to github-proxy.opensafely.org:80:127.0.0.1:8080)
+    curl_args+=(--connect-to docker-proxy.opensafely.org:80:127.0.0.1:8080)
+    curl_args+=(--connect-to opencodelists-proxy.opensafely.org:80:127.0.0.1:8080)
+    curl_args+=(--connect-to changelogs.opensafely.org:80:127.0.0.1:8080)
+
+    # Conditionally token if set. Only used for docker-proxy tests.
+    if test -n "${token}"; then
+        curl_args+=(-H "Authorization: Bearer $token")
+    fi
+
+    curl_args+=("$url")         # Add the URL
+
+    # Call curl with the arguments
+    code=$(curl "${curl_args[@]}" 2> "$headers")
 
     if test "$code" != "$expected"; then
         fail "$url returned $code, not $expected"
@@ -108,7 +117,6 @@ assert-header() {
     fi
 }
 
-
 ### github-proxy.opensafely.org ###
 
 # test we can query the clone metadata endpoint
@@ -129,7 +137,6 @@ try github-proxy.opensafely.org/opensafely/documentation/info/refs?service=git-r
 
 # test we cannot query the actual push endpoint
 git-post git-recieve-pack github-proxy.opensafely.org/opensafely/documentation/git-receive-pack 403
-
 
 # test we cannot access other parts of the repo
 try github-proxy.opensafely.org/opensafely/documentation 403
@@ -169,12 +176,30 @@ try docker-proxy.opensafely.org/v2/other/project 404
 assert-in-body '{ "errors": [{"code": "NAME_UNKNOWN", "message": "only opensafely repositories allowed" }] }';
 assert-header 'Content-Type: application/json; charset=UTF-8'
 
+# test the anonlymous login dance. ffs.
+# get a token
+try "docker-proxy.opensafely.org/token?scope=repository%3Aopensafely-core%2Fairlock%3Apull&service=ghcr.io" 200
+token=$(jq -r .token < "$body")
+
+# use the token to get the manifest
+try docker-proxy.opensafely.org/v2/opensafely-core/busybox/manifests/latest 200 "$token"
+digest=$(jq -r .config.digest < "$body")
+
+# try download a content blob, which will test our internal redirect handling,
+# including the strict ssl/host config
+try "docker-proxy.opensafely.org/v2/opensafely-core/busybox/blobs/$digest?" 200 "$token"
+
 ### opencodelists-proxy.opensafely.org ###
 
+# we should allow this specific call...
 try opencodelists-proxy.opensafely.org/api/v1/dmd-mapping/ 200
+
+# ...but not any others
 try opencodelists-proxy.opensafely.org/api/v1/codelist/ 404
 
+### changelogs.opensafely.org ###
 
+# This allows us to use the do-release-upgrade tool to perform major backend OS upgrades.
 try changelogs.opensafely.org/meta-release-lts 200
 
 exit $return_code
