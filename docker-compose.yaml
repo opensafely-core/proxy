@@ -1,0 +1,23 @@
+services:
+  proxy:
+    # use host for access to host RESOLVER
+    network_mode: host
+    build:
+      target: opensafely-proxy
+      cache_from:  # should speed up the build in CI, where we have a cold cache
+        - ghcr.io/opensafely-core/opensafely-proxy
+      args:
+        # this makes the image work for cache_from: usage
+        - BUILDKIT_INLINE_CACHE=1
+    # use dockers builitin PID 1 daemon
+    init: true
+    environment:
+      RESOLVER: ${RESOLVER}
+      PORT: ${PORT}
+
+  debug:
+    extends:
+      service: proxy
+    # run nginx in debug mode
+    command: ["nginx-debug", "-g", "daemon off; error_log /var/log/nginx/error.log debug;"]
+

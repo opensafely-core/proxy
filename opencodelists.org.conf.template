@@ -6,5 +6,10 @@ server {
         proxy_pass https://www.opencodelists.org;
         proxy_ssl_server_name on;
     }
+
+    location / {
+        add_header 'Content-Type' 'text/plain; charset=UTF-8' always;
+        return 404 'This proxy only supports fetching specific codelists.';
+    }
 }
 
