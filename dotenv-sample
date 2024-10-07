@@ -1,0 +1,6 @@
+# default resolver on ubuntu
+RESOLVER=127.0.0.53
+# port to run proxy on
+PORT=8080
+# switch to "debug" to build/run/test with nginx debug logging
+SERVICE=proxy
