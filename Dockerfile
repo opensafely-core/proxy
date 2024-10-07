@@ -3,4 +3,5 @@ FROM nginx:1.27.2 AS opensafely-proxy
 # Can be overridden via run time env var
 ENV ORGS=opensafely|opensafely-core|opensafely-actions
 ENV PORT=8080
+COPY nginx.conf /etc/nginx/nginx.conf
 COPY *.conf.template /etc/nginx/templates/
