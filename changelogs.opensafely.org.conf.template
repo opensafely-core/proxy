@@ -11,5 +11,9 @@ server {
         limit_except GET { deny all; }
         proxy_pass https://changelogs.ubuntu.com;
         proxy_redirect default;
+        # ensure Host header and SNI domain match
+        proxy_ssl_server_name on;
+
+
     }
 }

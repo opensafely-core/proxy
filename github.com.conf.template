@@ -46,6 +46,8 @@ server {
         limit_except POST { deny all; }
         proxy_pass https://github.com;
         proxy_redirect default;
+        # ensure Host header and SNI domain match
+        proxy_ssl_server_name on;
     }
 
     # allow ssh keys to be retreived for a user
@@ -53,6 +55,8 @@ server {
         limit_except GET { deny all; }
         proxy_pass https://github.com;
         proxy_redirect default;
+        # ensure Host header and SNI domain match
+        proxy_ssl_server_name on;
     }
 
     # allow release artifacts to be downloaded from specified repo only
@@ -60,6 +64,8 @@ server {
         limit_except GET { deny all; }
         proxy_pass https://github.com;
         proxy_redirect default;
+        # ensure Host header and SNI domain match
+        proxy_ssl_server_name on;
         # `releases/download` redirects to an S3 bucket, which is not accessible from
         # backends. So handle redirects to S3 here in the proxy rather than
         # passing back to the client
@@ -72,6 +78,8 @@ server {
         set $redirect '$upstream_http_location';
         # proxy the AWS location back to the client
         proxy_pass $redirect;
+        # ensure Host header and SNI domain match
+        proxy_ssl_server_name on;
     }
 
     location / {
