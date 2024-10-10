@@ -1,4 +1,4 @@
-# Read-only proxy certain organisation to ghcr.io
+# Read-only proxy certain organisations to ghcr.io
 #
 # RESOLVER:a DNS resolver for dynamically looking up redirect domains. Defaults to 127.0.0.1
 # PORT: defaults to 8080, but dokku can override
@@ -18,8 +18,7 @@ proxy_http_version 1.1; # keep alives to upstream
 
 server {
 
-    # note: embdatalab domain is for when we are being proxied by cloudflare
-    server_name docker-proxy.opensafely.org docker-proxy.dokku2.embdatalab.net;
+    server_name docker-proxy.opensafely.org;
     root /var/www/html;
     listen ${PORT};
 
@@ -37,11 +36,10 @@ server {
     location = /v2/ {
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
-        # explicitly change host header to expected host
-        proxy_set_header Host ghcr.io;
         proxy_redirect default;
         # ensure Host header and SNI domain match
         proxy_ssl_server_name on;
+
         # hide upstream header
         proxy_hide_header www-authenticate;
         # add our modified header 
@@ -52,9 +50,9 @@ server {
     location /token {
         limit_except GET { deny all; }
         proxy_pass https://ghcr.io;
+        proxy_redirect default;
         # ensure Host header and SNI domain match
         proxy_ssl_server_name on;
-        proxy_redirect default;
     }
 
     # opensafely images only, and handle redirects
@@ -64,6 +62,7 @@ server {
         # ensure Host header and SNI domain match
         proxy_ssl_server_name on;
         proxy_redirect default;
+
         # ghcr.io redirects to an S3 bucket, which is not accessible from
         # backends. So handle redirects to S3 here in the proxy rather than
         # passing back to the client
@@ -74,9 +73,9 @@ server {
     location @handle_redirect {
         # set saves the initial response's Location: header
         set $redirect '$upstream_http_location';
-        # strip the ghcr.io auth or else AWS rejects it, also stops it leaking
+        # strip the ghcr.io auth or else CDN rejects it, also stops it leaking
         proxy_set_header Authorization "";
-        # proxy the AWS location back to the client
+        # proxy the CDN location back to the client
         proxy_pass $redirect;
         # ensure Host header and SNI domain match
         proxy_ssl_server_name on;
