@@ -2,6 +2,8 @@ services:
   proxy:
     # use host for access to host RESOLVER
     network_mode: host
+    image: opensafely-proxy
+    container_name: proxy
     build:
       target: opensafely-proxy
       cache_from:  # should speed up the build in CI, where we have a cold cache
