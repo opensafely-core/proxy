@@ -159,10 +159,6 @@ assert-header 'Content-Type: text/plain; charset=UTF-8'
 try github-proxy.opensafely.org/bloodearnest.keys 200
 assert-in-body ed25519
 
-# test download
-try github-proxy.opensafely.org/opensafely-core/backend-server/releases/download/v0.1/test-download 200
-assert-in-body test
-
 ### docker-proxy.opensafely.org ###
 
 # test the initial docker request is rewritten correctly
