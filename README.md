@@ -6,7 +6,7 @@ when they need to access external data.
 
 This repository produces a Docker image that uses nginx to host four proxy
 domains, each has their own nginx config file:
- 
+
  * github-proxy.opensafely.org: this provides access to *only* opensafely
    repositories hosted on https://github.com, and not other repositories. It
    also restricts access to certain paths within those organisations.
@@ -16,14 +16,11 @@ domains, each has their own nginx config file:
    Container Registry, where the docker images for running the study code are
    stored.
 
- * opencodelists-proxy.opensafely.org: this provides access to a single OpenCodelists
-   API endpoint.
-
  * changelogs.opensafely.org: this allows us to use the do-release-upgrade tool
    to perform major OS upgrades.
 
 Whilst the last two are very simple, the first two requires some shenagins in
-order to proxy git http protocol and docker registry API v2.0 protocol. 
+order to proxy git http protocol and docker registry API v2.0 protocol.
 
 Of particular note is that ghcr.io issues 307 redirects for blob urls to
 a Fastly CDN url. Normally, this is pass back to the client, which fetchs the
@@ -33,7 +30,7 @@ url, and return the response to the original client.  Basically, we follow the
 redirect in nginx.
 
 ## Building docker image
- 
+
 To build
 
     just build
@@ -43,13 +40,13 @@ To build
 This will run the container in docker on port 8080. It uses `network_mode:
 host` in order to have access to the hosts resolver at 127.0.0.53.
 
-    just run 
+    just run
 
 Because we use handle redirects dynamically, we need to configure a DNS
 resolver at run time.  We use 127.0.0.53 by default, assuming you are running
 modern Ubuntu, you may need to use something different by editing .env
 
-## Testing 
+## Testing
 
 To run basic tests:
 
@@ -79,7 +76,7 @@ compose service, which runs with nginx debug logs. This is very verbose, but
 logs all request and response headers, so can be useful.
 
 To look at the debug logs, you can do:
-    
+
     docker compose logs debug
 
 
