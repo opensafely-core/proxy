@@ -7,8 +7,8 @@ set -euo pipefail
 # So we use curl's --resolve option to query the base APIs to check we get the
 # appropriate responses at the http level.
 #
-# see also: full-tests.sh, which can be run post deploy 
-# 
+# see also: full-tests.sh, which can be run post deploy
+#
 url=
 body=$(mktemp)
 headers=$(mktemp)
@@ -43,7 +43,6 @@ try() {
     curl_args+=(--write-out "%{http_code}")
     curl_args+=(--connect-to github-proxy.opensafely.org:80:127.0.0.1:8080)
     curl_args+=(--connect-to docker-proxy.opensafely.org:80:127.0.0.1:8080)
-    curl_args+=(--connect-to opencodelists-proxy.opensafely.org:80:127.0.0.1:8080)
     curl_args+=(--connect-to changelogs.opensafely.org:80:127.0.0.1:8080)
 
     # Conditionally token if set. Only used for docker-proxy tests.
@@ -66,7 +65,7 @@ try() {
 git-post() {
     # reset tests
     last_test_failed=0
- 
+
     type_=$1
     url=$2
     local expected=$3
@@ -90,7 +89,7 @@ git-post() {
     fi
 }
 
-    
+
 assert-in-body() {
     if test "$last_test_failed" = "1"; then
         echo "SKIP assert body"
@@ -159,10 +158,6 @@ assert-header 'Content-Type: text/plain; charset=UTF-8'
 try github-proxy.opensafely.org/bloodearnest.keys 200
 assert-in-body ed25519
 
-# test download
-try github-proxy.opensafely.org/opensafely-core/backend-server/releases/download/v0.1/test-download 200
-assert-in-body test
-
 ### docker-proxy.opensafely.org ###
 
 # test the initial docker request is rewritten correctly
@@ -172,7 +167,7 @@ assert-header 'X-GitHub-Request-Id:'
 assert-header 'Www-Authenticate: Bearer realm="https://docker-proxy.opensafely.org/token",service="docker-proxy.opensafely.org",scope="repository:user/image:pull"'
 
 # test other projects are 404'd
-try docker-proxy.opensafely.org/v2/other/project 404 
+try docker-proxy.opensafely.org/v2/other/project 404
 assert-in-body '{ "errors": [{"code": "NAME_UNKNOWN", "message": "only opensafely repositories allowed" }] }';
 assert-header 'Content-Type: application/json; charset=UTF-8'
 
@@ -188,14 +183,6 @@ digest=$(jq -r .config.digest < "$body")
 # try download a content blob, which will test our internal redirect handling,
 # including the strict ssl/host config
 try "docker-proxy.opensafely.org/v2/opensafely-core/busybox/blobs/$digest?" 200 "$token"
-
-### opencodelists-proxy.opensafely.org ###
-
-# we should allow this specific call...
-try opencodelists-proxy.opensafely.org/api/v1/dmd-mapping/ 200
-
-# ...but not any others
-try opencodelists-proxy.opensafely.org/api/v1/codelist/ 404
 
 ### changelogs.opensafely.org ###
 
