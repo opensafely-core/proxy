@@ -1,4 +1,4 @@
-FROM nginx:1.27.3 AS opensafely-proxy
+FROM nginx:1.29.1 AS opensafely-proxy
 # Default orgs, must be pipe separated as are fed into a regex match
 # Can be overridden via run time env var
 ENV ORGS=opensafely|opensafely-core|opensafely-actions
