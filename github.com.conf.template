@@ -8,6 +8,11 @@ server {
     root /var/www/html/;
     listen ${PORT};
 
+    location = /robots.txt {
+        add_header 'Content-Type' 'text/plain; charset=UTF-8' always;
+        return 200 "User-agent: *\nDisallow: /\n";
+    }
+
     # We `git fetch` commits from a persistant bare repo, which over time can
     # mean sending a lot of local state up to github as part of fetching. So
     # this needs to be larger than you'd think
