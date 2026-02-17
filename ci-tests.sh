@@ -118,6 +118,12 @@ assert-header() {
 
 ### github-proxy.opensafely.org ###
 
+# test robots is disallowed
+try github-proxy.opensafely.org/robots.txt 200
+assert-in-body 'User-agent: *'
+assert-in-body 'Disallow: /'
+assert-header 'Content-Type: text/plain; charset=UTF-8'
+
 # test we can query the clone metadata endpoint
 try github-proxy.opensafely.org/opensafely/documentation/info/refs?service=git-upload-pack 200
 assert-header 'X-GitHub-Request-Id:'
@@ -160,6 +166,12 @@ assert-in-body ed25519
 
 ### docker-proxy.opensafely.org ###
 
+# test robots is disallowed
+try docker-proxy.opensafely.org/robots.txt 200
+assert-in-body 'User-agent: *'
+assert-in-body 'Disallow: /'
+assert-header 'Content-Type: text/plain; charset=UTF-8'
+
 # test the initial docker request is rewritten correctly
 try docker-proxy.opensafely.org/v2/ 401
 assert-in-body '{"errors":[{"code":"UNAUTHORIZED","message":"authentication required"}]}'
@@ -185,9 +197,14 @@ digest=$(jq -r .config.digest < "$body")
 try "docker-proxy.opensafely.org/v2/opensafely-core/busybox/blobs/$digest?" 200 "$token"
 
 ### changelogs.opensafely.org ###
-
 # This allows us to use the do-release-upgrade tool to perform major backend OS upgrades.
 # Disabled as we don't typically needed unless we are using do-release-upgrade
+
 #try changelogs.opensafely.org/meta-release-lts 200
+# test robots is disallowed
+# try changelogs.opensafely.org/robots.txt 200
+# assert-in-body 'User-agent: *'
+# assert-in-body 'Disallow: /'
+# assert-header 'Content-Type: text/plain; charset=UTF-8'
 
 exit $return_code

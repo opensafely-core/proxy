@@ -7,6 +7,11 @@ server {
     root /var/www/html;
     listen ${PORT};
 
+    location = /robots.txt {
+        add_header 'Content-Type' 'text/plain; charset=UTF-8' always;
+        return 200 "User-agent: *\nDisallow: /\n";
+    }
+
     location / {
         limit_except GET { deny all; }
         proxy_pass https://changelogs.ubuntu.com;
