@@ -4,7 +4,7 @@ To secure and limit access to external services, the OpenSAFELY platform
 maintains a proxy service. OpenSAFELY backends explicitly use these proxies
 when they need to access external data.
 
-This repository produces a Docker image that uses nginx to host four proxy
+This repository produces a Docker image that uses nginx to host two proxy
 domains, each has their own nginx config file:
 
  * github-proxy.opensafely.org: this provides access to *only* opensafely
@@ -16,10 +16,7 @@ domains, each has their own nginx config file:
    Container Registry, where the docker images for running the study code are
    stored.
 
- * changelogs.opensafely.org: this allows us to use the do-release-upgrade tool
-   to perform major OS upgrades.
-
-Whilst the last two are very simple, the first two requires some shenagins in
+Whilst the last one are very simple, the first two requires some shenagins in
 order to proxy git http protocol and docker registry API v2.0 protocol.
 
 Of particular note is that ghcr.io issues 307 redirects for blob urls to
@@ -28,6 +25,18 @@ CDN url. However, that won't work in our backends, as we do not have access to
 Fastly. So, we use an `internal` nginx handler to resolve and fetch the Fastly
 url, and return the response to the original client.  Basically, we follow the
 redirect in nginx.
+
+## Disabled changelogs.ubuntu.com proxy.
+
+We also have a disabled config to allow proxying to changelogs.ubuntu.org. This
+may need to be temporarily re-enabled if we need to use do-release-upgrade tool
+in backends to enable major OS upgrades. 
+
+To re-enable:
+
+1. Rename `changelogs.opensafely.org.conf.template.disabled` to `changelogs.opensafely.org.conf.template`
+2. Uncomment any lines with changelogs in ci-test to reenable tests 
+
 
 ## Building docker image
 
