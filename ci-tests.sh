@@ -43,7 +43,7 @@ try() {
     curl_args+=(--write-out "%{http_code}")
     curl_args+=(--connect-to github-proxy.opensafely.org:80:127.0.0.1:8080)
     curl_args+=(--connect-to docker-proxy.opensafely.org:80:127.0.0.1:8080)
-    curl_args+=(--connect-to changelogs.opensafely.org:80:127.0.0.1:8080)
+    #curl_args+=(--connect-to changelogs.opensafely.org:80:127.0.0.1:8080)
 
     # Conditionally token if set. Only used for docker-proxy tests.
     if test -n "${token}"; then
@@ -187,6 +187,7 @@ try "docker-proxy.opensafely.org/v2/opensafely-core/busybox/blobs/$digest?" 200 
 ### changelogs.opensafely.org ###
 
 # This allows us to use the do-release-upgrade tool to perform major backend OS upgrades.
-try changelogs.opensafely.org/meta-release-lts 200
+# Disabled as we don't typically needed unless we are using do-release-upgrade
+#try changelogs.opensafely.org/meta-release-lts 200
 
 exit $return_code
