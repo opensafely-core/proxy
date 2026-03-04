@@ -11,7 +11,7 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v6
-    - uses: extractions/setup-just@69d82fb0233557aec017ef13706851d0694e0f1d
+    - uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b
     - name: Build image
       run: just build
     - name: Run tests
