@@ -4,6 +4,8 @@ on:
     # 09:00 UTC every day
     - cron: '0 9 * * *'
   workflow_dispatch:
+permissions:
+  contents: read
 env:
   EXPECTED: 'realm="https://ghcr.io/token",service="ghcr.io",scope="repository:user/image:pull"'
 jobs:
@@ -11,6 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: checkout
-      uses: actions/checkout@master
+      uses: actions/checkout@v6
     - name: check
       run: python3 check-header.py
