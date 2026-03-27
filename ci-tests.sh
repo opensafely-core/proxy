@@ -9,6 +9,11 @@ set -euo pipefail
 #
 # see also: full-tests.sh, which can be run post deploy
 #
+BASE_DOMAIN=${BASE_DOMAIN:-opensafely.org}
+GITHUB_PROXY_HOST=github-proxy.${BASE_DOMAIN}
+DOCKER_PROXY_HOST=docker-proxy.${BASE_DOMAIN}
+#CHANGELOGS_PROXY_HOST=changelogs.${BASE_DOMAIN}
+
 url=
 body=$(mktemp)
 headers=$(mktemp)
@@ -41,9 +46,9 @@ try() {
 
     curl_args+=(-s --verbose --output "$body")
     curl_args+=(--write-out "%{http_code}")
-    curl_args+=(--connect-to github-proxy.opensafely.org:80:127.0.0.1:8080)
-    curl_args+=(--connect-to docker-proxy.opensafely.org:80:127.0.0.1:8080)
-    #curl_args+=(--connect-to changelogs.opensafely.org:80:127.0.0.1:8080)
+    curl_args+=(--connect-to "${GITHUB_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${DOCKER_PROXY_HOST}:80:127.0.0.1:8080")
+    #curl_args+=(--connect-to "${CHANGELOGS_PROXY_HOST}:80:127.0.0.1:8080")
 
     # Conditionally token if set. Only used for docker-proxy tests.
     if test -n "${token}"; then
@@ -76,7 +81,7 @@ git-post() {
         -H "content-type: application/x-$type_-request" \
         -H "accept: application/x-$type_-result" \
         -H "git-protocol: version=2" \
-        --connect-to github-proxy.opensafely.org:80:127.0.0.1:8080 \
+        --connect-to "${GITHUB_PROXY_HOST}:80:127.0.0.1:8080" \
         --write-out "%{http_code}"\
         "$url" \
         2> "$headers"
@@ -116,93 +121,93 @@ assert-header() {
     fi
 }
 
-### github-proxy.opensafely.org ###
+### $GITHUB_PROXY_HOST ###
 
 # test robots is disallowed
-try github-proxy.opensafely.org/robots.txt 200
+try "${GITHUB_PROXY_HOST}/robots.txt" 200
 assert-in-body 'User-agent: *'
 assert-in-body 'Disallow: /'
 assert-header 'Content-Type: text/plain; charset=UTF-8'
 
 # test we can query the clone metadata endpoint
-try github-proxy.opensafely.org/opensafely/documentation/info/refs?service=git-upload-pack 200
+try "${GITHUB_PROXY_HOST}/opensafely/documentation/info/refs?service=git-upload-pack" 200
 assert-header 'X-GitHub-Request-Id:'
 
 # test we can query the actul clone endpoint on public repo
-git-post git-upload-pack github-proxy.opensafely.org/opensafely/documentation/git-upload-pack 200
+git-post git-upload-pack "${GITHUB_PROXY_HOST}/opensafely/documentation/git-upload-pack" 200
 assert-header 'X-GitHub-Request-Id:'
 
 # test we can query the actul clone endpoint on private repo
-git-post git-upload-pack github-proxy.opensafely.org/opensafely/server-instructions/git-upload-pack 401
+git-post git-upload-pack "${GITHUB_PROXY_HOST}/opensafely/server-instructions/git-upload-pack" 401
 assert-header 'X-GitHub-Request-Id:'
 
 
 # test we cannot query the push metadata endpoint
-try github-proxy.opensafely.org/opensafely/documentation/info/refs?service=git-receive-pack 403
+try "${GITHUB_PROXY_HOST}/opensafely/documentation/info/refs?service=git-receive-pack" 403
 
 # test we cannot query the actual push endpoint
-git-post git-recieve-pack github-proxy.opensafely.org/opensafely/documentation/git-receive-pack 403
+git-post git-recieve-pack "${GITHUB_PROXY_HOST}/opensafely/documentation/git-receive-pack" 403
 
 # test we cannot access other parts of the repo
-try github-proxy.opensafely.org/opensafely/documentation 403
+try "${GITHUB_PROXY_HOST}/opensafely/documentation" 403
 # test we cannot access other /info/refs queries
-try github-proxy.opensafely.org/opensafely/documentation/info/refs?foo=bar 403
+try "${GITHUB_PROXY_HOST}/opensafely/documentation/info/refs?foo=bar" 403
 
 # test we cannot access other parts of the repo
-try github-proxy.opensafely.org/opensafely-core/job-runner 403
+try "${GITHUB_PROXY_HOST}/opensafely-core/job-runner" 403
 
 # test for opensafely-actions org
-try github-proxy.opensafely.org/opensafely-actions/safetab/info/refs?service=git-upload-pack 200
+try "${GITHUB_PROXY_HOST}/opensafely-actions/safetab/info/refs?service=git-upload-pack" 200
 assert-header 'X-GitHub-Request-Id:'
 
 # test other orgs are 403'd, even when they exist
-try github-proxy.opensafely.org/torvalds/linux/info/refs?service=git-upload-pack 403
+try "${GITHUB_PROXY_HOST}/torvalds/linux/info/refs?service=git-upload-pack" 403
 assert-in-body 'This proxy only supports fetching commits from specific github organisations.'
 assert-header 'Content-Type: text/plain; charset=UTF-8'
 
 # test keys
-try github-proxy.opensafely.org/bloodearnest.keys 200
+try "${GITHUB_PROXY_HOST}/bloodearnest.keys" 200
 assert-in-body ed25519
 
-### docker-proxy.opensafely.org ###
+### $DOCKER_PROXY_HOST ###
 
 # test robots is disallowed
-try docker-proxy.opensafely.org/robots.txt 200
+try "${DOCKER_PROXY_HOST}/robots.txt" 200
 assert-in-body 'User-agent: *'
 assert-in-body 'Disallow: /'
 assert-header 'Content-Type: text/plain; charset=UTF-8'
 
 # test the initial docker request is rewritten correctly
-try docker-proxy.opensafely.org/v2/ 401
+try "${DOCKER_PROXY_HOST}/v2/" 401
 assert-in-body '{"errors":[{"code":"UNAUTHORIZED","message":"authentication required"}]}'
 assert-header 'X-GitHub-Request-Id:'
-assert-header 'Www-Authenticate: Bearer realm="https://docker-proxy.opensafely.org/token",service="docker-proxy.opensafely.org",scope="repository:user/image:pull"'
+assert-header "Www-Authenticate: Bearer realm=\"https://${DOCKER_PROXY_HOST}/token\",service=\"${DOCKER_PROXY_HOST}\",scope=\"repository:user/image:pull\""
 
 # test other projects are 404'd
-try docker-proxy.opensafely.org/v2/other/project 404
+try "${DOCKER_PROXY_HOST}/v2/other/project" 404
 assert-in-body '{ "errors": [{"code": "NAME_UNKNOWN", "message": "only opensafely repositories allowed" }] }';
 assert-header 'Content-Type: application/json; charset=UTF-8'
 
 # test the anonlymous login dance. ffs.
 # get a token
-try "docker-proxy.opensafely.org/token?scope=repository%3Aopensafely-core%2Fairlock%3Apull&service=ghcr.io" 200
+try "${DOCKER_PROXY_HOST}/token?scope=repository%3Aopensafely-core%2Fairlock%3Apull&service=ghcr.io" 200
 token=$(jq -r .token < "$body")
 
 # use the token to get the manifest
-try docker-proxy.opensafely.org/v2/opensafely-core/busybox/manifests/latest 200 "$token"
+try "${DOCKER_PROXY_HOST}/v2/opensafely-core/busybox/manifests/latest" 200 "$token"
 digest=$(jq -r .config.digest < "$body")
 
 # try download a content blob, which will test our internal redirect handling,
 # including the strict ssl/host config
-try "docker-proxy.opensafely.org/v2/opensafely-core/busybox/blobs/$digest?" 200 "$token"
+try "${DOCKER_PROXY_HOST}/v2/opensafely-core/busybox/blobs/$digest?" 200 "$token"
 
-### changelogs.opensafely.org ###
+### $CHANGELOGS_PROXY_HOST ###
 # This allows us to use the do-release-upgrade tool to perform major backend OS upgrades.
 # Disabled as we don't typically needed unless we are using do-release-upgrade
 
-#try changelogs.opensafely.org/meta-release-lts 200
+#try "${CHANGELOGS_PROXY_HOST}/meta-release-lts" 200
 # test robots is disallowed
-# try changelogs.opensafely.org/robots.txt 200
+# try "${CHANGELOGS_PROXY_HOST}/robots.txt" 200
 # assert-in-body 'User-agent: *'
 # assert-in-body 'Disallow: /'
 # assert-header 'Content-Type: text/plain; charset=UTF-8'
