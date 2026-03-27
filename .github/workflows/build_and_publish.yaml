@@ -26,11 +26,11 @@ jobs:
       run: docker login https://ghcr.io -u ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
     - name: Push image to GitHub Container Registry
       run: |
-        docker tag $IMAGE_NAME $PUBLIC_IMAGE_NAME:latest
-        docker push $PUBLIC_IMAGE_NAME:latest
+        docker tag "$IMAGE_NAME" "$PUBLIC_IMAGE_NAME:latest"
+        docker push "$PUBLIC_IMAGE_NAME:latest"
     - name: Setup SSH Agent
       run: |
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-agent -a "$SSH_AUTH_SOCK" > /dev/null
           ssh-add - <<< "${{ secrets.DOKKU4_DEPLOY_SSH_KEY }}"
     - name: Deploy image
       run: |
