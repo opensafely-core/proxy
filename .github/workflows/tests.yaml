@@ -14,5 +14,7 @@ jobs:
     - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3
     - name: Build image
       run: just build
-    - name: Run tests
-      run: just test
+    - name: Run tests for opensafely.org
+      run: just test opensafely.org
+    - name: Run tests ted.bennettoxford.org
+      run: just test ted.bennettoxford.org

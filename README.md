@@ -47,7 +47,7 @@ To build
 ## Running
 
 This will run the container in docker on port 8080. It uses `network_mode:
-host` in order to have access to the hosts resolver at 127.0.0.53.
+host` in order to have access to the hosts resolver at 127.0.0.53. It defaults to using `BASE_DOMAIN=opensafely.org`
 
     just run
 
@@ -55,9 +55,15 @@ Because we use handle redirects dynamically, we need to configure a DNS
 resolver at run time.  We use 127.0.0.53 by default, assuming you are running
 modern Ubuntu, you may need to use something different by editing .env
 
+The public proxy hostnames are also configured at run time via
+`BASE_DOMAIN`. With the default `BASE_DOMAIN=opensafely.org`, the image serves
+`github-proxy.opensafely.org` and `docker-proxy.opensafely.org`. Setting
+`BASE_DOMAIN` to a different suffix lets you deploy the same image for another
+domain while keeping the same subdomains.
+
 ## Testing
 
-To run basic tests:
+To run basic tests, defaulting to using `BASE_DOMAIN=opensafely.org`
 
     just test
 

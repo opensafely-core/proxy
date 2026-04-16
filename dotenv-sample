@@ -1,3 +1,7 @@
+# public proxy domain suffix
+BASE_DOMAIN=opensafely.org
+# github org we can checkout from
+ORGS=opensafely,opensafely-core
 # default resolver on ubuntu
 RESOLVER=127.0.0.53
 # port to run proxy on

@@ -14,6 +14,7 @@ services:
     # use dockers builitin PID 1 daemon
     init: true
     environment:
+      BASE_DOMAIN: ${BASE_DOMAIN:-opensafely.org}
       RESOLVER: ${RESOLVER}
       PORT: ${PORT}
 
@@ -22,4 +23,3 @@ services:
       service: proxy
     # run nginx in debug mode
     command: ["nginx-debug", "-g", "daemon off; error_log /var/log/nginx/error.log debug;"]
-

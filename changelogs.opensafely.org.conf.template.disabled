@@ -3,7 +3,7 @@
 #
 server {
 
-    server_name changelogs.ubuntu.com;
+    server_name changelogs.${BASE_DOMAIN};
     root /var/www/html;
     listen ${PORT};
 
