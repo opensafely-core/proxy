@@ -1,0 +1,48 @@
+
+# Proxy the Ubuntu APT repositories to allow updates
+#
+server {
+
+    server_name archive-ubuntu.${BASE_DOMAIN};
+    root /var/www/html;
+    listen ${PORT};
+
+    location / {
+        # Dissuade naive crawlers from trying to index this site by rejecting anything
+        # which doesn't claim to be either APT or Curl (Curl, for ease of debugging).
+        # This obviously isn't intended to offer "protection" in any meaningful sense
+        # but it should be enough to prevent typical crawlers from wasting our
+        # bandwidth.
+        if ($http_user_agent !~ ^(Debian\ APT-|curl/)) {
+            return 403;
+        }
+
+        limit_except GET { deny all; }
+        proxy_pass https://archive.ubuntu.com;
+        proxy_redirect default;
+        # ensure Host header and SNI domain match
+        proxy_ssl_server_name on;
+
+
+    }
+}
+
+server {
+
+    server_name security-ubuntu.${BASE_DOMAIN};
+    root /var/www/html;
+    listen ${PORT};
+
+    location / {
+        if ($http_user_agent !~ ^(Debian\ APT-|curl/)) {
+            return 403;
+        }
+
+        limit_except GET { deny all; }
+        proxy_pass https://security.ubuntu.com;
+        proxy_redirect default;
+        proxy_ssl_server_name on;
+
+
+    }
+}
