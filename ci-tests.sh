@@ -12,6 +12,8 @@ set -euo pipefail
 BASE_DOMAIN=${BASE_DOMAIN:-opensafely.org}
 GITHUB_PROXY_HOST=github-proxy.${BASE_DOMAIN}
 DOCKER_PROXY_HOST=docker-proxy.${BASE_DOMAIN}
+UBUNTU_ARCHIVE_PROXY_HOST=archive-ubuntu.${BASE_DOMAIN}
+UBUNTU_SECURITY_PROXY_HOST=security-ubuntu.${BASE_DOMAIN}
 #CHANGELOGS_PROXY_HOST=changelogs.${BASE_DOMAIN}
 
 url=
@@ -41,6 +43,7 @@ try() {
     url=$1
     local expected=$2
     local token=${3:-}
+    local user_agent=${4:-}
 
     local curl_args=()
 
@@ -48,11 +51,18 @@ try() {
     curl_args+=(--write-out "%{http_code}")
     curl_args+=(--connect-to "${GITHUB_PROXY_HOST}:80:127.0.0.1:8080")
     curl_args+=(--connect-to "${DOCKER_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${UBUNTU_ARCHIVE_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${UBUNTU_SECURITY_PROXY_HOST}:80:127.0.0.1:8080")
     #curl_args+=(--connect-to "${CHANGELOGS_PROXY_HOST}:80:127.0.0.1:8080")
 
     # Conditionally token if set. Only used for docker-proxy tests.
     if test -n "${token}"; then
         curl_args+=(-H "Authorization: Bearer $token")
+    fi
+
+    # Conditionally set user agent; only used for APT proxy tests
+    if test -n "${user_agent}"; then
+        curl_args+=(--user-agent "$user_agent")
     fi
 
     curl_args+=("$url")         # Add the URL
@@ -200,6 +210,22 @@ digest=$(jq -r .config.digest < "$body")
 # try download a content blob, which will test our internal redirect handling,
 # including the strict ssl/host config
 try "${DOCKER_PROXY_HOST}/v2/opensafely-core/busybox/blobs/$digest?" 200 "$token"
+
+### $UBUNTU_ARCHIVE_PROXY_HOST ###
+
+try "${UBUNTU_ARCHIVE_PROXY_HOST}/ubuntu/" 200
+assert-in-body 'archive.ubuntu.com'
+assert-in-body 'dists/'
+
+try "${UBUNTU_ARCHIVE_PROXY_HOST}/ubuntu/" 403 '' 'Googlebot'
+
+### $UBUNTU_SECURITY_PROXY_HOST ###
+
+try "${UBUNTU_SECURITY_PROXY_HOST}/ubuntu/" 200
+assert-in-body 'security.ubuntu.com'
+assert-in-body 'dists/'
+
+try "${UBUNTU_SECURITY_PROXY_HOST}/ubuntu/" 403 '' 'Googlebot'
 
 ### $CHANGELOGS_PROXY_HOST ###
 # This allows us to use the do-release-upgrade tool to perform major backend OS upgrades.
