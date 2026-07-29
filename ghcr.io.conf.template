@@ -68,6 +68,14 @@ server {
         proxy_ssl_server_name on;
         proxy_redirect default;
 
+        # Docker 29/containerd takes the auth challenge from the manifest
+        # response rather than the /v2/ ping, so we need to rewrite the auth
+        # header here too.
+        # hide upstream header
+        proxy_hide_header www-authenticate;
+        # add our modified header 
+        add_header Www-Authenticate $auth_header always;
+
         # ghcr.io redirects to an S3 bucket, which is not accessible from
         # backends. So handle redirects to S3 here in the proxy rather than
         # passing back to the client
