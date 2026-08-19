@@ -4,8 +4,8 @@ To secure and limit access to external services, the OpenSAFELY platform
 maintains a proxy service. OpenSAFELY backends explicitly use these proxies
 when they need to access external data.
 
-This repository produces a Docker image that uses nginx to host four proxy
-domains, configured across three nginx config files:
+This repository produces a Docker image that uses nginx to host five proxy
+domains, configured across four nginx config files:
 
  * github-proxy.opensafely.org: this provides access to *only* opensafely
    repositories hosted on https://github.com, and not other repositories. It
@@ -21,7 +21,10 @@ domains, configured across three nginx config files:
    http://security.ubuntu.com so that machines running within the secure environments
    can be kept up-to-date.
 
-Whilst the last one is very simple, the first two require some shenanigans in
+ * release.opensafely.org: this provides proxy access to the /api/v2/releases/* and
+   /api/v2/airlock/events job-server API endpoints on https://jobs.opensafely.org.
+
+Whilst the last two are very simple, the first two require some shenanigans in
 order to proxy git http protocol and docker registry API v2.0 protocol.
 
 Of particular note is that ghcr.io issues 307 redirects for blob urls to

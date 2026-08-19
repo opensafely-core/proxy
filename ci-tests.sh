@@ -14,6 +14,7 @@ GITHUB_PROXY_HOST=github-proxy.${BASE_DOMAIN}
 DOCKER_PROXY_HOST=docker-proxy.${BASE_DOMAIN}
 UBUNTU_ARCHIVE_PROXY_HOST=archive-ubuntu.${BASE_DOMAIN}
 UBUNTU_SECURITY_PROXY_HOST=security-ubuntu.${BASE_DOMAIN}
+RELEASE_PROXY_HOST=release.${BASE_DOMAIN}
 #CHANGELOGS_PROXY_HOST=changelogs.${BASE_DOMAIN}
 
 url=
@@ -53,6 +54,7 @@ try() {
     curl_args+=(--connect-to "${DOCKER_PROXY_HOST}:80:127.0.0.1:8080")
     curl_args+=(--connect-to "${UBUNTU_ARCHIVE_PROXY_HOST}:80:127.0.0.1:8080")
     curl_args+=(--connect-to "${UBUNTU_SECURITY_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${RELEASE_PROXY_HOST}:80:127.0.0.1:8080")
     #curl_args+=(--connect-to "${CHANGELOGS_PROXY_HOST}:80:127.0.0.1:8080")
 
     # Conditionally token if set. Only used for docker-proxy tests.
@@ -226,6 +228,17 @@ assert-in-body 'security.ubuntu.com'
 assert-in-body 'dists/'
 
 try "${UBUNTU_SECURITY_PROXY_HOST}/ubuntu/" 403 '' 'Googlebot'
+
+### $RELEASE_PROXY_HOST ###
+# Confirm that the proxied URL resolves; we aren't providing a valid token or
+# user, so 403 is expected
+try "${RELEASE_PROXY_HOST}/api/v2/releases/workspace/test-age-distribution" 403
+assert-in-body 'Invalid user or token'
+# test robots is disallowed
+try "${RELEASE_PROXY_HOST}/robots.txt" 200
+assert-in-body 'User-agent: *'
+assert-in-body 'Disallow: /'
+assert-header 'Content-Type: text/plain; charset=UTF-8'
 
 ### $CHANGELOGS_PROXY_HOST ###
 # This allows us to use the do-release-upgrade tool to perform major backend OS upgrades.
