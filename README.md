@@ -122,3 +122,18 @@ dokku:~$ dokku nginx:set proxy proxy-buffer-size 16k
 =====> Setting proxy-buffer-size to 16k
 dokku:~$ dokku ps:restart proxy
 ```
+
+### Adding a new proxied domain
+
+Adding a `<new-proxy>.conf.template` file to this repo and merging will build and deploy the
+dokku app automatically. To get the new domain working, you also need to:
+
+1) Add a DNS record for the proxied domain in cloudflare, pointing at dokku4's IP.
+2) Add a domain to the dokku app. On dokku4:
+    ```
+    dokku domains:add proxy <new-proxy>.opensafely.org
+    ```
+3) Generate certs for the new domain (existing valid certs will be skipped)
+    ```
+    dokku letsencrypt:enable proxy
+    ```
