@@ -16,5 +16,7 @@ jobs:
       run: just build
     - name: Run tests for opensafely.org
       run: just test opensafely.org
+    - name: Run tests for emis-staging.opensafely.org
+      run: just test emis-staging.opensafely.org
     - name: Run tests ted.bennettoxford.org
       run: just test ted.bennettoxford.org

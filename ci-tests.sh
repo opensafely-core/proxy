@@ -232,13 +232,17 @@ try "${UBUNTU_SECURITY_PROXY_HOST}/ubuntu/" 403 '' 'Googlebot'
 ### $RELEASE_PROXY_HOST ###
 # Confirm that the proxied URL resolves; we aren't providing a valid token or
 # user, so 403 is expected
-try "${RELEASE_PROXY_HOST}/api/v2/releases/workspace/test-age-distribution" 403
-assert-in-body 'Invalid user or token'
-# test robots is disallowed
-try "${RELEASE_PROXY_HOST}/robots.txt" 200
-assert-in-body 'User-agent: *'
-assert-in-body 'Disallow: /'
-assert-header 'Content-Type: text/plain; charset=UTF-8'
+# Only test with opensafely.org domains; others (e.g. ted.bennettoxford.org) don't
+# have /api/v2/ endpoints to proxy
+if [ "$BASE_DOMAIN" == *opensafely.org ]; then
+    try "${RELEASE_PROXY_HOST}/api/v2/releases/workspace/test-age-distribution" 403
+    assert-in-body 'Invalid user or token'
+    # test robots is disallowed
+    try "${RELEASE_PROXY_HOST}/robots.txt" 200
+    assert-in-body 'User-agent: *'
+    assert-in-body 'Disallow: /'
+    assert-header 'Content-Type: text/plain; charset=UTF-8'
+fi
 
 ### $CHANGELOGS_PROXY_HOST ###
 # This allows us to use the do-release-upgrade tool to perform major backend OS upgrades.
