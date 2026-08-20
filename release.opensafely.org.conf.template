@@ -1,0 +1,42 @@
+
+# Proxy the job-server API
+#
+server {
+
+    server_name release.${BASE_DOMAIN};
+    root /var/www/html;
+    listen ${PORT};
+
+    location = /robots.txt {
+        add_header 'Content-Type' 'text/plain; charset=UTF-8' always;
+        return 200 "User-agent: *\nDisallow: /\n";
+    }
+
+    # Allow any method to releases endpoints; this covers Airlock auth
+    # and releasing. Headers are passed through unmodified.
+    location /api/v2/releases/ {
+        proxy_pass https://jobs.${BASE_DOMAIN};
+        proxy_redirect default;
+        # ensure Host header and SNI domain match
+        proxy_ssl_server_name on;
+
+        # Released files are uploaded one at a time; L4 files have a
+        # max allowed size of 16Mb, so set max body size to 20Mb to allow some
+        # overhead
+        # Note: POSTS to the upload endpoint typically take 100-300ms, and there
+        # have been none over 400ms in the past 60 days (as of 2026-08-19) so we
+        # shouldn't need to increase proxy_read_timeout / proxy_send_timeout from the
+        # default 60s. We may need to revisit this if we see 504s on this endpoint.
+        client_max_body_size 20m;
+    }
+
+    # Allow any method to airlock/events/ endpoint only (with or without trailing slash),
+    # for Airlock notifications
+    location  ~ ^/api/v2/airlock/events/?$ {
+        proxy_pass https://jobs.${BASE_DOMAIN};
+        proxy_redirect default;
+        # ensure Host header and SNI domain match
+        proxy_ssl_server_name on;
+    }
+}
+
