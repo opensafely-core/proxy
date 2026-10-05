@@ -234,7 +234,7 @@ try "${UBUNTU_SECURITY_PROXY_HOST}/ubuntu/" 403 '' 'Googlebot'
 # user, so 403 is expected
 # Only test with opensafely.org domains; others (e.g. ted.bennettoxford.org) don't
 # have /api/v2/ endpoints to proxy
-if [ "$BASE_DOMAIN" == *opensafely.org ]; then
+if [[ "$BASE_DOMAIN" == *opensafely.org ]]; then
     try "${RELEASE_PROXY_HOST}/api/v2/releases/workspace/test-age-distribution" 403
     assert-in-body 'Invalid user or token'
     # test robots is disallowed
