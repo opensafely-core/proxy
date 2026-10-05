@@ -17,6 +17,8 @@ services:
       BASE_DOMAIN: ${BASE_DOMAIN:-opensafely.org}
       RESOLVER: ${RESOLVER}
       PORT: ${PORT}
+    volumes:
+      - ./tests/tls-verify-test.conf.template:/etc/nginx/templates/tls-verify-test.conf.template:ro
 
   debug:
     extends:

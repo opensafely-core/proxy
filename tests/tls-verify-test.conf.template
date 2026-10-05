@@ -1,0 +1,39 @@
+# Test-only vhost for checking that we verify upstream TLS certificates.
+
+server {
+
+    server_name tls-verify-test.invalid;
+    root /var/www/html;
+    listen ${PORT};
+    resolver ${RESOLVER};
+
+    # ensure Host header and SNI domain match
+    proxy_ssl_server_name on;
+
+    # valid certificate, should be proxied
+    location = /good {
+        set $upstream https://badssl.com/;
+        proxy_pass $upstream;
+    }
+
+    # invalid certificates, should all be rejected with a 502
+    location = /self-signed {
+        set $upstream https://self-signed.badssl.com/;
+        proxy_pass $upstream;
+    }
+
+    location = /untrusted-root {
+        set $upstream https://untrusted-root.badssl.com/;
+        proxy_pass $upstream;
+    }
+
+    location = /expired {
+        set $upstream https://expired.badssl.com/;
+        proxy_pass $upstream;
+    }
+
+    location = /wrong-host {
+        set $upstream https://wrong.host.badssl.com/;
+        proxy_pass $upstream;
+    }
+}
