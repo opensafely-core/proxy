@@ -15,6 +15,7 @@ DOCKER_PROXY_HOST=docker-proxy.${BASE_DOMAIN}
 UBUNTU_ARCHIVE_PROXY_HOST=archive-ubuntu.${BASE_DOMAIN}
 UBUNTU_SECURITY_PROXY_HOST=security-ubuntu.${BASE_DOMAIN}
 RELEASE_PROXY_HOST=release.${BASE_DOMAIN}
+TLS_VERIFY_TEST_HOST=tls-verify-test.invalid
 #CHANGELOGS_PROXY_HOST=changelogs.${BASE_DOMAIN}
 
 url=
@@ -55,6 +56,7 @@ try() {
     curl_args+=(--connect-to "${UBUNTU_ARCHIVE_PROXY_HOST}:80:127.0.0.1:8080")
     curl_args+=(--connect-to "${UBUNTU_SECURITY_PROXY_HOST}:80:127.0.0.1:8080")
     curl_args+=(--connect-to "${RELEASE_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${TLS_VERIFY_TEST_HOST}:80:127.0.0.1:8080")
     #curl_args+=(--connect-to "${CHANGELOGS_PROXY_HOST}:80:127.0.0.1:8080")
 
     # Conditionally token if set. Only used for docker-proxy tests.
@@ -234,7 +236,7 @@ try "${UBUNTU_SECURITY_PROXY_HOST}/ubuntu/" 403 '' 'Googlebot'
 # user, so 403 is expected
 # Only test with opensafely.org domains; others (e.g. ted.bennettoxford.org) don't
 # have /api/v2/ endpoints to proxy
-if [ "$BASE_DOMAIN" == *opensafely.org ]; then
+if [[ "$BASE_DOMAIN" == *opensafely.org ]]; then
     try "${RELEASE_PROXY_HOST}/api/v2/releases/workspace/test-age-distribution" 403
     assert-in-body 'Invalid user or token'
     # test robots is disallowed
@@ -243,6 +245,16 @@ if [ "$BASE_DOMAIN" == *opensafely.org ]; then
     assert-in-body 'Disallow: /'
     assert-header 'Content-Type: text/plain; charset=UTF-8'
 fi
+
+### $TLS_VERIFY_TEST_HOST ###
+# Check that we verify upstream TLS certificates and that invalid certificates are
+# handled correctly.
+
+try "${TLS_VERIFY_TEST_HOST}/good" 200
+try "${TLS_VERIFY_TEST_HOST}/self-signed" 502
+try "${TLS_VERIFY_TEST_HOST}/untrusted-root" 502
+try "${TLS_VERIFY_TEST_HOST}/expired" 502
+try "${TLS_VERIFY_TEST_HOST}/wrong-host" 502
 
 ### $CHANGELOGS_PROXY_HOST ###
 # This allows us to use the do-release-upgrade tool to perform major backend OS upgrades.
