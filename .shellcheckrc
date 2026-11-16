@@ -1,0 +1,2 @@
+# Follow `source`d files (e.g. tests/helpers.sh) without needing `shellcheck -x`.
+external-sources=true
