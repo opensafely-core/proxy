@@ -58,31 +58,23 @@ try() {
     _check_code "$expected"
 }
 
+# Usage: git-post SERVICE URL EXPECTED_CODE
 git-post() {
     # reset tests
     last_test_failed=0
 
-    type_=$1
+    local type_=$1
+    # global
     url=$2
     local expected=$3
 
-    code="$(
-        curl --verbose --output "$body" -X POST \
+    _curl -X POST \
         -H "accept-encoding: deflate, gzip, br, zstd" \
         -H "content-type: application/x-$type_-request" \
         -H "accept: application/x-$type_-result" \
         -H "git-protocol: version=2" \
-        --connect-to "${GITHUB_PROXY_HOST}:80:127.0.0.1:8080" \
-        --write-out "%{http_code}"\
-        "$url" \
-        2> "$headers"
-    )"
-
-    if test "$code" != "$expected"; then
-        fail "$url returned $code, not $expected"
-    else
-        ok "$url returned $code"
-    fi
+        "$url"
+    _check_code "$expected"
 }
 
 
