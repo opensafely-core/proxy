@@ -32,6 +32,7 @@ ok() {
     last_test_failed=0
 }
 
+# Usage: try URL EXPECTED_CODE [TOKEN] [USER_AGENT]
 try() {
     # reset tests
     last_test_failed=0
@@ -41,38 +42,20 @@ try() {
     local token=${3:-}
     local user_agent=${4:-}
 
-    local curl_args=()
-
-    curl_args+=(-s --verbose --output "$body")
-    curl_args+=(--write-out "%{http_code}")
-    curl_args+=(--connect-to "${GITHUB_PROXY_HOST}:80:127.0.0.1:8080")
-    curl_args+=(--connect-to "${DOCKER_PROXY_HOST}:80:127.0.0.1:8080")
-    curl_args+=(--connect-to "${UBUNTU_ARCHIVE_PROXY_HOST}:80:127.0.0.1:8080")
-    curl_args+=(--connect-to "${UBUNTU_SECURITY_PROXY_HOST}:80:127.0.0.1:8080")
-    curl_args+=(--connect-to "${RELEASE_PROXY_HOST}:80:127.0.0.1:8080")
-    curl_args+=(--connect-to "${TLS_VERIFY_TEST_HOST}:80:127.0.0.1:8080")
-    #curl_args+=(--connect-to "${CHANGELOGS_PROXY_HOST}:80:127.0.0.1:8080")
+    local args=()
 
     # Conditionally token if set. Only used for docker-proxy tests.
     if test -n "${token}"; then
-        curl_args+=(-H "Authorization: Bearer $token")
+        args+=(-H "Authorization: Bearer $token")
     fi
 
     # Conditionally set user agent; only used for APT proxy tests
     if test -n "${user_agent}"; then
-        curl_args+=(--user-agent "$user_agent")
+        args+=(--user-agent "$user_agent")
     fi
 
-    curl_args+=("$url")         # Add the URL
-
-    # Call curl with the arguments
-    code=$(curl "${curl_args[@]}" 2> "$headers")
-
-    if test "$code" != "$expected"; then
-        fail "$url returned $code, not $expected"
-    else
-        ok "$url returned $code"
-    fi
+    _curl "${args[@]}" "$url"
+    _check_code "$expected"
 }
 
 git-post() {
@@ -126,5 +109,41 @@ assert-header() {
         ok "$url returned expected header $1"
     else
         fail "$url did not return header $1"
+    fi
+}
+
+# Internal helpers.
+
+# Run curl against the local proxy, routing every proxy hostname to
+# 127.0.0.1:8080. Extra curl arguments (method, headers, URL) are passed
+# through. The response body goes to $body and curl's verbose output
+# (including headers) to $headers.
+#
+# Sets the global $code to the HTTP status.
+_curl() {
+    local curl_args=()
+
+    curl_args+=(-s --verbose --output "$body")
+    curl_args+=(--write-out "%{http_code}")
+    curl_args+=(--connect-to "${GITHUB_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${DOCKER_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${UBUNTU_ARCHIVE_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${UBUNTU_SECURITY_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${RELEASE_PROXY_HOST}:80:127.0.0.1:8080")
+    curl_args+=(--connect-to "${TLS_VERIFY_TEST_HOST}:80:127.0.0.1:8080")
+    #curl_args+=(--connect-to "${CHANGELOGS_PROXY_HOST}:80:127.0.0.1:8080")
+
+    curl_args+=("$@")
+
+    code=$(curl "${curl_args[@]}" 2> "$headers")
+}
+
+# Compare $code (set by _curl) with the expected status code.
+_check_code() {
+    local expected=$1
+    if test "$code" != "$expected"; then
+        fail "$url returned $code, not $expected"
+    else
+        ok "$url returned $code"
     fi
 }
