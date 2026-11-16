@@ -91,17 +91,35 @@ assert-in-body() {
     fi
 }
 
+# Usage: assert-header 'Name: value-prefix'
+#
+# Passes if the most recent response has a header called Name whose value
+# starts with value-prefix. The name is matched case-insensitively, as HTTP
+# header names are. The value is matched literally and case-sensitively.
+# 'Name:' on its own checks only that the header is present. Only response
+# headers are checked, not the request headers that curl --verbose also
+# logs.
 assert-header() {
     if test "$last_test_failed" = "1"; then
         echo "SKIP assert header"
         return
     fi
     local expected=$1
-    if grep -sq "$1" "$headers"; then
-        ok "$url returned expected header $1"
-    else
-        fail "$url did not return header $1"
-    fi
+    local expected_name=${expected%%:*}
+    local expected_value=${expected#*:}
+    local line name value
+    # curl --verbose logs response headers as "< Name: value"
+    while IFS= read -r line; do
+        [[ $line == "< "* ]] || continue
+        line=${line#< }
+        name=${line%%:*}
+        value=${line#*:}
+        if [[ ${name,,} == "${expected_name,,}" && $value == "$expected_value"* ]]; then
+            ok "$url returned expected header $expected"
+            return
+        fi
+    done < "$headers"
+    fail "$url did not return header $expected"
 }
 
 # Internal helpers.
