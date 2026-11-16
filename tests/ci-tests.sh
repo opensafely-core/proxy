@@ -46,7 +46,7 @@ assert-header 'X-GitHub-Request-Id:'
 try "${GITHUB_PROXY_HOST}/opensafely/documentation/info/refs?service=git-receive-pack" 403
 
 # test we cannot query the actual push endpoint
-git-post git-recieve-pack "${GITHUB_PROXY_HOST}/opensafely/documentation/git-receive-pack" 403
+git-post git-receive-pack "${GITHUB_PROXY_HOST}/opensafely/documentation/git-receive-pack" 403
 
 # test we cannot access other parts of the repo
 try "${GITHUB_PROXY_HOST}/opensafely/documentation" 403
