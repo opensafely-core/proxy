@@ -43,7 +43,7 @@ in backends to enable major OS upgrades.
 To re-enable:
 
 1. Rename `changelogs.opensafely.org.conf.template.disabled` to `changelogs.opensafely.org.conf.template`
-2. Uncomment any lines with changelogs in ci-test to reenable tests 
+2. Uncomment any lines with changelogs in tests/ci-tests.sh to reenable tests
 
 
 ## Building docker image
@@ -75,7 +75,7 @@ To run basic tests, defaulting to using `BASE_DOMAIN=opensafely.org`
 
     just test
 
-This will build and run the image and run ./ci-tests.sh, which is basic http
+This will build and run the image and run tests/ci-tests.sh, which is basic http
 tests. These tests use the very useful `--connect-to` argument to curl, and as
 such, are written in bash.
 
@@ -89,7 +89,7 @@ You can inspect the nginx logs with:
 Full integraton tests can only be run against the current production
 deployment, as it requires TLS and DNS:
 
-    ./full-tests.sh
+    tests/full-tests.sh
 
 
 ## Debug build

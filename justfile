@@ -21,7 +21,7 @@ run domain="opensafely.org": _env
 test domain="opensafely.org": (run domain)
     #!/usr/bin/env bash
     export BASE_DOMAIN="{{ domain }}"
-    ./ci-tests.sh
+    tests/ci-tests.sh
 
 # view proxy logs
 logs:
