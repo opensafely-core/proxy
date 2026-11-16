@@ -91,11 +91,11 @@ assert-header 'Content-Type: application/json; charset=UTF-8'
 # test the anonlymous login dance. ffs.
 # get a token
 try "${DOCKER_PROXY_HOST}/token?scope=repository%3Aopensafely-core%2Fairlock%3Apull&service=ghcr.io" 200
-token=$(jq -r .token < "$body")
+token=$(jq -r .token < "$body") || { fail "$url: could not parse token from body"; token=; }
 
 # use the token to get the manifest
 try "${DOCKER_PROXY_HOST}/v2/opensafely-core/busybox/manifests/latest" 200 "$token"
-digest=$(jq -r .config.digest < "$body")
+digest=$(jq -r .config.digest < "$body") || { fail "$url: could not parse digest from body"; digest=; }
 
 # try download a content blob, which will test our internal redirect handling,
 # including the strict ssl/host config
