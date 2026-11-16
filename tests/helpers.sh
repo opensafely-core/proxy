@@ -111,7 +111,9 @@ assert-header() {
 # through. The response body goes to $body and curl's verbose output
 # (including headers) to $headers.
 #
-# Sets the global $code to the HTTP status.
+# Sets the global $code to the HTTP status. If curl itself fails (e.g.
+# connection refused), $code is set to "curl-exit-N" instead, so the failure
+# is recorded by the caller rather than aborting the script under `set -e`.
 _curl() {
     local curl_args=()
 
@@ -127,7 +129,7 @@ _curl() {
 
     curl_args+=("$@")
 
-    code=$(curl "${curl_args[@]}" 2> "$headers")
+    code=$(curl "${curl_args[@]}" 2> "$headers") || code="curl-exit-$?"
 }
 
 # Compare $code (set by _curl) with the expected status code.
