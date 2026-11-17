@@ -90,7 +90,7 @@ assert-header 'Content-Type: application/json; charset=UTF-8'
 
 # test the anonlymous login dance. ffs.
 # get a token
-try "${DOCKER_PROXY_HOST}/token?scope=repository%3Aopensafely-core%2Fairlock%3Apull&service=ghcr.io" 200
+try "${DOCKER_PROXY_HOST}/token?scope=repository%3Aopensafely-core%2Fbusybox%3Apull&service=ghcr.io" 200
 token=$(jq -r .token < "$body") || { fail "$url: could not parse token from body"; token=; }
 
 # use the token to get the manifest
